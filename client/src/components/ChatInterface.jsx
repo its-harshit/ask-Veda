@@ -2,14 +2,14 @@ import React, { useState, useRef, useEffect } from 'react'
 import { useChat } from '../context/ChatContext'
 import { useSocket } from '../context/SocketContext'
 import MessageList from './MessageList'
-import MessageInput from './MessageInput'
-import ChatHeader from './ChatHeader'
-import { Menu, Plus, Send, Bot, User } from 'lucide-react'
+import { Menu, Plus, Send, Bot, User, Search, Paperclip } from 'lucide-react'
+import npciLogo from '../assets/npci-logo.jpg'
 
 const ChatInterface = ({ sidebarOpen, setSidebarOpen }) => {
-  const { messages, isLoading, typing } = useChat()
+  const { messages, isLoading, typing, sendMessage } = useChat()
   const { isConnected } = useSocket()
   const messagesEndRef = useRef(null)
+  const [inputValue, setInputValue] = useState('')
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -19,72 +19,177 @@ const ChatInterface = ({ sidebarOpen, setSidebarOpen }) => {
     scrollToBottom()
   }, [messages])
 
+  const handleSubmit = (e) => {
+    e.preventDefault()
+    if (inputValue.trim()) {
+      sendMessage(inputValue.trim())
+      setInputValue('')
+    }
+  }
+
+  const handleKeyPress = (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      handleSubmit(e)
+    }
+  }
+
   return (
     <div className="flex flex-col h-full bg-white">
-      {/* Header */}
-      <ChatHeader 
-        sidebarOpen={sidebarOpen} 
-        setSidebarOpen={setSidebarOpen}
-        isConnected={isConnected}
-      />
-
-      {/* Messages Area */}
+      {/* Messages Area - Takes up available space */}
       <div className="flex-1 overflow-y-auto px-4 py-6">
         {messages.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full text-center">
-            <div className="w-16 h-16 bg-primary-100 rounded-full flex items-center justify-center mb-4">
-              <Bot className="w-8 h-8 text-primary-600" />
+            {/* Brand */}
+            <div className="flex items-center justify-center space-x-4 mb-8">
+              <h1 className="text-3xl font-bold text-npci-700">askVeda</h1>
+              <img 
+                src={npciLogo} 
+                alt="NPCI Logo" 
+                className="w-12 h-8 object-contain"
+              />
             </div>
-            <h2 className="text-2xl font-semibold text-gray-900 mb-2">
-              Welcome to ChatUI
-            </h2>
+            
+            {/* Main Search Input */}
+            <form onSubmit={handleSubmit} className="w-full max-w-4xl mx-auto mb-8">
+              <div className="relative bg-white border border-gray-300 rounded-2xl shadow-lg p-4">
+                <div className="flex items-center space-x-3">
+                  {/* Left Icons */}
+                  <div className="flex items-center space-x-2">
+                    <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                      <Search className="w-4 h-4 text-blue-600" />
+                    </div>
+                  </div>
+                  
+                  {/* Input Field */}
+                  <div className="flex-1">
+                    <input
+                      type="text"
+                      placeholder="Ask anything..."
+                      value={inputValue}
+                      onChange={(e) => setInputValue(e.target.value)}
+                      onKeyPress={handleKeyPress}
+                      className="w-full text-lg bg-transparent border-none outline-none placeholder-gray-500"
+                    />
+                  </div>
+                  
+                  {/* Right Icons */}
+                  <div className="flex items-center space-x-2">
+                    <button 
+                      type="button"
+                      className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center hover:bg-gray-200 transition-colors"
+                    >
+                      <Paperclip className="w-4 h-4 text-gray-500" />
+                    </button>
+                    <button 
+                      type="submit"
+                      className="w-8 h-8 bg-green-600 rounded-full flex items-center justify-center hover:bg-green-700 transition-colors"
+                    >
+                      <Send className="w-4 h-4 text-white" />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </form>
+            
+            {/* Action Buttons - Completely Separate */}
+            <div className="flex items-center justify-center space-x-3 mb-8">
+              <button className="px-4 py-2 bg-npci-100 text-npci-700 rounded-full flex items-center space-x-2 hover:bg-npci-200 transition-colors">
+                <span className="text-sm">💰</span>
+                <span className="text-sm font-medium">Payments</span>
+              </button>
+              <button className="px-4 py-2 bg-npci-100 text-npci-700 rounded-full flex items-center space-x-2 hover:bg-npci-200 transition-colors">
+                <span className="text-sm">🏦</span>
+                <span className="text-sm font-medium">UPI</span>
+              </button>
+              <button className="px-4 py-2 bg-npci-100 text-npci-700 rounded-full flex items-center space-x-2 hover:bg-npci-200 transition-colors">
+                <span className="text-sm">📊</span>
+                <span className="text-sm font-medium">Analytics</span>
+              </button>
+              <button className="px-4 py-2 bg-npci-100 text-npci-700 rounded-full flex items-center space-x-2 hover:bg-npci-200 transition-colors">
+                <span className="text-sm">🔒</span>
+                <span className="text-sm font-medium">Security</span>
+              </button>
+              <button className="px-4 py-2 bg-npci-100 text-npci-700 rounded-full flex items-center space-x-2 hover:bg-npci-200 transition-colors">
+                <span className="text-sm">📱</span>
+                <span className="text-sm font-medium">Mobile</span>
+              </button>
+            </div>
+            
+            {/* Welcome Message */}
             <p className="text-gray-600 max-w-md">
-              Start a conversation by typing a message below. I'm here to help you with any questions or tasks you might have.
+              Start a conversation by typing a message above. I'm here to help you with any questions or tasks you might have.
             </p>
-            <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-4 max-w-2xl w-full">
-              <div className="p-4 border border-gray-200 rounded-xl hover:border-primary-300 transition-colors cursor-pointer">
-                <h3 className="font-medium text-gray-900 mb-2">Ask me anything</h3>
-                <p className="text-sm text-gray-600">Get answers to your questions with detailed explanations</p>
-              </div>
-              <div className="p-4 border border-gray-200 rounded-xl hover:border-primary-300 transition-colors cursor-pointer">
-                <h3 className="font-medium text-gray-900 mb-2">Code assistance</h3>
-                <p className="text-sm text-gray-600">Get help with programming and debugging code</p>
-              </div>
-              <div className="p-4 border border-gray-200 rounded-xl hover:border-primary-300 transition-colors cursor-pointer">
-                <h3 className="font-medium text-gray-900 mb-2">Writing help</h3>
-                <p className="text-sm text-gray-600">Get assistance with writing, editing, and content creation</p>
-              </div>
-              <div className="p-4 border border-gray-200 rounded-xl hover:border-primary-300 transition-colors cursor-pointer">
-                <h3 className="font-medium text-gray-900 mb-2">Analysis</h3>
-                <p className="text-sm text-gray-600">Analyze data, documents, or complex topics</p>
-              </div>
-            </div>
           </div>
         ) : (
-          <MessageList messages={messages} />
+          <>
+            <MessageList messages={messages} />
+            
+            {/* Typing indicator */}
+            {typing && (
+              <div className="flex items-center space-x-2 p-4">
+                <div className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center">
+                  <Bot className="w-4 h-4 text-gray-600" />
+                </div>
+                <div className="typing-indicator">
+                  <div className="typing-dot"></div>
+                  <div className="typing-dot" style={{ animationDelay: '0.2s' }}></div>
+                  <div className="typing-dot" style={{ animationDelay: '0.4s' }}></div>
+                </div>
+              </div>
+            )}
+            
+            <div ref={messagesEndRef} />
+          </>
         )}
-        
-        {/* Typing indicator */}
-        {typing && (
-          <div className="flex items-center space-x-2 p-4">
-            <div className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center">
-              <Bot className="w-4 h-4 text-gray-600" />
-            </div>
-            <div className="typing-indicator">
-              <div className="typing-dot"></div>
-              <div className="typing-dot" style={{ animationDelay: '0.2s' }}></div>
-              <div className="typing-dot" style={{ animationDelay: '0.4s' }}></div>
-            </div>
+      </div>
+      
+      {/* Input Area - Stuck to Bottom */}
+      {messages.length > 0 && (
+        <div className="border-t border-gray-200 p-4 bg-white">
+          <div className="w-full max-w-4xl mx-auto">
+            <form onSubmit={handleSubmit} className="mb-4">
+              <div className="relative bg-white border border-gray-300 rounded-2xl shadow-lg p-4">
+                <div className="flex items-center space-x-3">
+                  {/* Left Icons */}
+                  <div className="flex items-center space-x-2">
+                    <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                      <Search className="w-4 h-4 text-blue-600" />
+                    </div>
+                  </div>
+                  
+                  {/* Input Field */}
+                  <div className="flex-1">
+                    <input
+                      type="text"
+                      placeholder="Ask anything..."
+                      value={inputValue}
+                      onChange={(e) => setInputValue(e.target.value)}
+                      onKeyPress={handleKeyPress}
+                      className="w-full text-lg bg-transparent border-none outline-none placeholder-gray-500"
+                    />
+                  </div>
+                  
+                  {/* Right Icons */}
+                  <div className="flex items-center space-x-2">
+                    <button 
+                      type="button"
+                      className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center hover:bg-gray-200 transition-colors"
+                    >
+                      <Paperclip className="w-4 h-4 text-gray-500" />
+                    </button>
+                    <button 
+                      type="submit"
+                      className="w-8 h-8 bg-green-600 rounded-full flex items-center justify-center hover:bg-green-700 transition-colors"
+                    >
+                      <Send className="w-4 h-4 text-white" />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </form>
           </div>
-        )}
-        
-        <div ref={messagesEndRef} />
-      </div>
-
-      {/* Input Area */}
-      <div className="border-t border-gray-200 p-4">
-        <MessageInput />
-      </div>
+        </div>
+      )}
     </div>
   )
 }

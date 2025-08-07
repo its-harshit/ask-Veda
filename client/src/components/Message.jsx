@@ -59,7 +59,7 @@ const Message = ({ message }) => {
   }
 
   return (
-    <div className={`flex ${isUser ? 'justify-end' : 'justify-start'}`}>
+    <div className={`flex ${isUser ? 'justify-end' : 'justify-start'} mb-4`}>
       <div className={`flex items-start space-x-3 max-w-[85%] ${isUser ? 'flex-row-reverse space-x-reverse' : ''}`}>
         <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
           isUser ? 'bg-primary-500' : 'bg-gray-200'
@@ -71,10 +71,14 @@ const Message = ({ message }) => {
           )}
         </div>
         
-        <div className={`flex-1 ${isUser ? 'text-right' : ''}`}>
-          <div className={`message-bubble ${isUser ? 'user-message' : 'assistant-message'}`}>
+        <div className={`flex-1 min-w-0 ${isUser ? 'text-right' : ''}`}>
+          <div className={`inline-block rounded-2xl px-4 py-3 max-w-full ${
+            isUser 
+              ? 'bg-primary-500 text-white' 
+              : 'bg-gray-100 text-gray-900'
+          }`}>
             {isUser ? (
-              <p className="text-white">{message.content}</p>
+              <span className="text-white break-words">{message.content}</span>
             ) : (
               <ReactMarkdown components={components} className="prose prose-sm max-w-none">
                 {message.content}

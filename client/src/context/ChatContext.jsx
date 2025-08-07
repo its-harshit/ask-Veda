@@ -41,7 +41,7 @@ const chatReducer = (state, action) => {
 export const ChatProvider = ({ children }) => {
   const [state, dispatch] = useReducer(chatReducer, initialState)
   const { chatId } = useParams()
-  const { onMessage } = useSocket()
+  const { onMessage, sendMessage: socketSendMessage } = useSocket()
 
   const addMessage = (message) => {
     dispatch({ type: 'ADD_MESSAGE', payload: message })
@@ -79,6 +79,38 @@ export const ChatProvider = ({ children }) => {
     dispatch({ type: 'CLEAR_MESSAGES' })
   }
 
+  const sendMessage = (content) => {
+    const message = {
+      id: Date.now().toString(),
+      content,
+      role: 'user',
+      timestamp: new Date().toISOString(),
+      chatId: chatId || 'default'
+    }
+
+    // Add user message to local state
+    addMessage(message)
+
+    // Send message to server via socket
+    socketSendMessage({
+      content,
+      role: 'user',
+      chatId: chatId || 'default'
+    })
+
+    // Simulate AI response (you can replace this with actual AI integration)
+    setTimeout(() => {
+      const aiResponse = {
+        id: (Date.now() + 1).toString(),
+        content: `I received your message: "${content}". This is a simulated response. In a real implementation, this would be connected to an AI service.`,
+        role: 'assistant',
+        timestamp: new Date().toISOString(),
+        chatId: chatId || 'default'
+      }
+      addMessage(aiResponse)
+    }, 1000)
+  }
+
   // Listen for incoming messages from socket
   useEffect(() => {
     onMessage((data) => {
@@ -105,7 +137,8 @@ export const ChatProvider = ({ children }) => {
     setLoading,
     setError,
     setTyping,
-    clearMessages
+    clearMessages,
+    sendMessage
   }
 
   return (
