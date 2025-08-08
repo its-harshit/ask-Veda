@@ -20,7 +20,7 @@ app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
 
 // MongoDB Connection
-mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/chatui')
+mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/askveda')
 
 const db = mongoose.connection
 db.on('error', console.error.bind(console, 'MongoDB connection error:'))
@@ -119,7 +119,7 @@ io.on('connection', (socket) => {
 
 // Basic route
 app.get('/', (req, res) => {
-  res.json({ message: 'ChatUI API is running' })
+  res.json({ message: 'askVeda API is running' })
 })
 
 // Error handling middleware

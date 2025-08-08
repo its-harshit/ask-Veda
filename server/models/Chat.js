@@ -15,9 +15,19 @@ const chatSchema = new mongoose.Schema({
     ref: 'User',
     required: false
   },
+  sessionId: {
+    type: String,
+    required: false,
+    default: null
+  },
   lastMessage: {
     content: String,
     timestamp: Date,
+    role: {
+      type: String,
+      enum: ['user', 'assistant'],
+      default: 'user'
+    },
     sender: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'User'
@@ -49,6 +59,7 @@ chatSchema.methods.updateLastMessage = function(message, sender) {
   this.lastMessage = {
     content: message.content,
     timestamp: message.timestamp,
+    role: message.role || 'user',
     sender: sender
   }
   this.messageCount += 1
@@ -62,6 +73,7 @@ chatSchema.methods.toSummaryJSON = function() {
     title: this.title,
     lastMessage: this.lastMessage,
     messageCount: this.messageCount,
+    sessionId: this.sessionId,
     createdAt: this.createdAt,
     updatedAt: this.updatedAt
   }

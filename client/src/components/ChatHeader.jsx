@@ -3,7 +3,7 @@ import { Menu, Plus, Wifi, WifiOff } from 'lucide-react'
 
 const ChatHeader = ({ sidebarOpen, setSidebarOpen, isConnected }) => {
   return (
-    <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 bg-white">
+    <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 bg-background-primary">
       <div className="flex items-center space-x-4">
         <button
           onClick={() => setSidebarOpen(!sidebarOpen)}
@@ -13,26 +13,26 @@ const ChatHeader = ({ sidebarOpen, setSidebarOpen, isConnected }) => {
         </button>
         
         <div className="flex items-center space-x-3">
-          <div className="w-8 h-8 bg-primary-500 rounded-lg flex items-center justify-center">
+          <div className="w-8 h-8 bg-gradient-to-br from-primary-600 to-primary-700 rounded-lg flex items-center justify-center">
             <span className="text-white font-semibold text-sm">C</span>
           </div>
           <div>
-            <h1 className="text-lg font-semibold text-gray-900">askVeda</h1>
-            <p className="text-sm text-gray-500">AI Assistant</p>
+            <h1 className="text-lg font-semibold text-text-primary">askVeda</h1>
+            <p className="text-sm text-text-secondary">AI Assistant</p>
           </div>
         </div>
       </div>
 
       <div className="flex items-center space-x-2">
-        <div className="flex items-center space-x-1 text-sm text-gray-500">
+        <div className="flex items-center space-x-1 text-sm text-text-secondary">
           {isConnected ? (
             <>
-              <Wifi className="w-4 h-4 text-green-500" />
+              <Wifi className="w-4 h-4 text-success-500" />
               <span>Connected</span>
             </>
           ) : (
             <>
-              <WifiOff className="w-4 h-4 text-red-500" />
+              <WifiOff className="w-4 h-4 text-danger-500" />
               <span>Disconnected</span>
             </>
           )}

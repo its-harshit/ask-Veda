@@ -61,18 +61,24 @@ router.get('/', authenticateUser, async (req, res) => {
 // Create new chat
 router.post('/', authenticateUser, async (req, res) => {
   try {
-    const { title, participants } = req.body
+    const { title = 'New Chat' } = req.body
+
+    // Get session ID from token
+    const token = req.headers.authorization?.replace('Bearer ', '')
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key')
+    const sessionId = decoded.sessionId
 
     const chat = new Chat({
-      title: title || 'New Chat',
+      title,
       createdBy: req.user._id,
-      participants: participants || [req.user._id]
+      participants: [req.user._id],
+      sessionId: sessionId
     })
 
     await chat.save()
 
-    // Populate the chat with user data
-    await chat.populate('participants', 'username avatar isOnline')
+    // Populate creator info
+    await chat.populate('createdBy', 'username avatar')
 
     res.status(201).json({
       message: 'Chat created successfully',

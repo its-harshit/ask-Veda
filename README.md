@@ -1,4 +1,4 @@
-# ChatUI - Modern Chat Interface
+# askVeda - Modern Chat Interface
 
 A beautiful, modern chat application inspired by Perplexity's UI, built with React.js and MongoDB. Features real-time messaging, markdown support, code highlighting, and a responsive design.
 
@@ -51,7 +51,7 @@ A beautiful, modern chat application inspired by Perplexity's UI, built with Rea
 1. **Clone the repository**
    ```bash
    git clone <repository-url>
-   cd chatui
+   cd askveda
    ```
 
 2. **Install dependencies**
@@ -103,7 +103,7 @@ A beautiful, modern chat application inspired by Perplexity's UI, built with Rea
 ## 🏗️ Project Structure
 
 ```
-chatui/
+askveda/
 ├── client/                 # React frontend
 │   ├── src/
 │   │   ├── components/    # React components
@@ -132,7 +132,7 @@ PORT=5000
 NODE_ENV=development
 
 # MongoDB Configuration
-MONGODB_URI=mongodb://localhost:27017/chatui
+MONGODB_URI=mongodb://localhost:27017/askveda
 
 # JWT Configuration
 JWT_SECRET=your-super-secret-jwt-key-change-this-in-production
@@ -146,7 +146,7 @@ CLIENT_URL=http://localhost:3000
 1. **Local MongoDB**:
    - Install MongoDB locally
    - Start MongoDB service
-   - Use `mongodb://localhost:27017/chatui`
+   - Use `mongodb://localhost:27017/askveda`
 
 2. **MongoDB Atlas (Cloud)**:
    - Create MongoDB Atlas account

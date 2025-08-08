@@ -60,7 +60,7 @@ router.get('/chat/:chatId', authenticateUser, async (req, res) => {
     // Get messages with pagination
     const messages = await Message.find({ chatId })
       .populate('sender', 'username avatar')
-      .sort({ timestamp: -1 })
+      .sort({ timestamp: 1 })
       .limit(parseInt(limit))
       .skip((parseInt(page) - 1) * parseInt(limit))
 
@@ -112,11 +112,17 @@ router.post('/', authenticateUser, async (req, res) => {
       })
     }
 
+    // Get session ID from token
+    const token = req.headers.authorization?.replace('Bearer ', '')
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key')
+    const sessionId = decoded.sessionId
+
     // Create new message
     const message = new Message({
       content,
       role,
       chatId,
+      sessionId: sessionId,
       sender: req.user._id,
       timestamp: new Date()
     })

@@ -17,6 +17,11 @@ const messageSchema = new mongoose.Schema({
     ref: 'Chat',
     required: true
   },
+  sessionId: {
+    type: String,
+    required: false,
+    default: null
+  },
   sender: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User'
@@ -91,6 +96,7 @@ messageSchema.methods.toFullJSON = function() {
     content: this.content,
     role: this.role,
     chatId: this.chatId,
+    sessionId: this.sessionId,
     sender: this.sender,
     timestamp: this.timestamp,
     isRead: this.isRead,

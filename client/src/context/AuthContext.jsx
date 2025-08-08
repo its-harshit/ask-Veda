@@ -1,41 +1,47 @@
 import React, { createContext, useContext, useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 
 const AuthContext = createContext()
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null)
   const [token, setToken] = useState(localStorage.getItem('token'))
+  const [sessionId, setSessionId] = useState(localStorage.getItem('sessionId'))
   const [loading, setLoading] = useState(true)
+  const navigate = useNavigate()
 
-  // Check if user is authenticated on app load
-  useEffect(() => {
-    const checkAuth = async () => {
-      if (token) {
-        try {
-          const response = await fetch('http://localhost:5000/api/auth/me', {
-            headers: {
-              'Authorization': `Bearer ${token}`,
-              'Content-Type': 'application/json'
-            }
-          })
-          
-          if (response.ok) {
-            const data = await response.json()
-            setUser(data.user)
-          } else {
-            // Token is invalid, remove it
-            localStorage.removeItem('token')
-            setToken(null)
+  const checkAuth = async () => {
+    if (token) {
+      try {
+        const response = await fetch('http://localhost:5000/api/auth/me', {
+          headers: {
+            'Authorization': `Bearer ${token}`
           }
-        } catch (error) {
-          console.error('Auth check failed:', error)
-          localStorage.removeItem('token')
-          setToken(null)
-        }
-      }
-      setLoading(false)
-    }
+        })
 
+        if (response.ok) {
+          const data = await response.json()
+          setUser(data.user)
+        } else {
+          setUser(null)
+          setToken(null)
+          setSessionId(null)
+          localStorage.removeItem('token')
+          localStorage.removeItem('sessionId')
+        }
+      } catch (error) {
+        console.error('Auth check error:', error)
+        setUser(null)
+        setToken(null)
+        setSessionId(null)
+        localStorage.removeItem('token')
+        localStorage.removeItem('sessionId')
+      }
+    }
+    setLoading(false)
+  }
+
+  useEffect(() => {
     checkAuth()
   }, [token])
 
@@ -54,7 +60,10 @@ export const AuthProvider = ({ children }) => {
       if (response.ok) {
         setUser(data.user)
         setToken(data.token)
+        setSessionId(data.sessionId)
         localStorage.setItem('token', data.token)
+        localStorage.setItem('sessionId', data.sessionId)
+        navigate('/')
         return { success: true }
       } else {
         return { success: false, error: data.error }
@@ -80,7 +89,10 @@ export const AuthProvider = ({ children }) => {
       if (response.ok) {
         setUser(data.user)
         setToken(data.token)
+        setSessionId(data.sessionId)
         localStorage.setItem('token', data.token)
+        localStorage.setItem('sessionId', data.sessionId)
+        navigate('/')
         return { success: true }
       } else {
         return { success: false, error: data.error }
@@ -107,18 +119,22 @@ export const AuthProvider = ({ children }) => {
     } finally {
       setUser(null)
       setToken(null)
+      setSessionId(null)
       localStorage.removeItem('token')
+      localStorage.removeItem('sessionId')
+      navigate('/login')
     }
   }
 
   const value = {
     user,
     token,
+    sessionId,
     loading,
+    isAuthenticated: !!user,
     login,
     register,
-    logout,
-    isAuthenticated: !!user
+    logout
   }
 
   return (

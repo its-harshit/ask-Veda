@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { useAuth } from '../context/AuthContext'
 import { Phone, Lock, Eye, EyeOff, Bot } from 'lucide-react'
+import npciLogo from '../assets/npci-logo.jpg'
 
 const Login = ({ onSwitchToRegister }) => {
   const [mobile, setMobile] = useState('')
@@ -25,28 +26,27 @@ const Login = ({ onSwitchToRegister }) => {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-white py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8">
-        <div className="text-center">
-          <div className="mx-auto h-16 w-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center mb-6 shadow-lg">
-            <Bot className="h-8 w-8 text-white" />
-          </div>
-          <h2 className="text-3xl font-bold text-gray-900 mb-2">Welcome back</h2>
-          <p className="text-gray-600">
-            Sign in to continue with askVeda
-          </p>
+    <div className="w-full space-y-8">
+      <div className="text-center">
+        <div className="mx-auto h-16 w-16 bg-gradient-to-br from-primary-500 to-primary-600 rounded-2xl flex items-center justify-center mb-6 shadow-medium">
+          <img src={npciLogo} alt="NPCI Logo" className="h-16 w-16 text-white" />
         </div>
+        <h2 className="text-3xl font-bold text-text-primary mb-2">Welcome back</h2>
+        <p className="text-text-secondary">
+          Sign in to continue with askVeda
+        </p>
+      </div>
 
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
-          {error && (
-            <div className="bg-red-50 border border-red-200 rounded-xl p-4">
-              <p className="text-sm text-red-600 font-medium">{error}</p>
-            </div>
-          )}
+      <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
+        {error && (
+          <div className="bg-danger-50 border border-danger-200 rounded-xl p-4">
+            <p className="text-sm text-danger-600 font-medium">{error}</p>
+          </div>
+        )}
 
                      <div className="space-y-4">
              <div>
-               <label htmlFor="mobile" className="block text-sm font-semibold text-gray-700 mb-3">
+               <label htmlFor="mobile" className="block text-sm font-semibold text-text-secondary mb-3">
                  Mobile number
                </label>
                <div className="relative">
@@ -61,7 +61,7 @@ const Login = ({ onSwitchToRegister }) => {
                    required
                    value={mobile}
                    onChange={(e) => setMobile(e.target.value)}
-                   className="w-full px-4 py-4 pl-12 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-gray-900 placeholder-gray-500"
+                   className="w-full px-4 py-4 pl-12 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 text-text-primary placeholder-gray-500"
                    placeholder="Enter your mobile number"
                    pattern="[0-9]{10}"
                    maxLength="10"
@@ -70,7 +70,7 @@ const Login = ({ onSwitchToRegister }) => {
              </div>
 
             <div>
-              <label htmlFor="password" className="block text-sm font-semibold text-gray-700 mb-3">
+              <label htmlFor="password" className="block text-sm font-semibold text-text-secondary mb-3">
                 Password
               </label>
               <div className="relative">
@@ -85,7 +85,7 @@ const Login = ({ onSwitchToRegister }) => {
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full px-4 py-4 pl-12 pr-12 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-gray-900 placeholder-gray-500"
+                  className="w-full px-4 py-4 pl-12 pr-12 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 text-text-primary placeholder-gray-500"
                   placeholder="Enter your password"
                 />
                 <button
@@ -107,7 +107,7 @@ const Login = ({ onSwitchToRegister }) => {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-gradient-to-r from-blue-500 to-purple-600 text-white py-4 px-6 rounded-xl font-semibold hover:from-blue-600 hover:to-purple-700 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+              className="w-full bg-gradient-to-r from-primary-600 to-primary-700 text-white py-4 px-6 rounded-xl font-semibold hover:from-primary-700 hover:to-primary-800 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-medium hover:shadow-large transform hover:-translate-y-0.5"
             >
               {loading ? (
                 <div className="flex items-center justify-center space-x-2">
@@ -121,12 +121,12 @@ const Login = ({ onSwitchToRegister }) => {
           </div>
 
           <div className="text-center pt-4">
-            <p className="text-gray-600">
+            <p className="text-text-secondary">
               Don't have an account?{' '}
               <button
                 type="button"
                 onClick={onSwitchToRegister}
-                className="font-semibold text-blue-600 hover:text-blue-700 transition-colors"
+                className="font-semibold text-primary-600 hover:text-primary-700 transition-colors"
               >
                 Sign up
               </button>
@@ -134,8 +134,7 @@ const Login = ({ onSwitchToRegister }) => {
           </div>
         </form>
       </div>
-    </div>
-  )
+    )
 }
 
 export default Login

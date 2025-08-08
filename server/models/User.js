@@ -10,12 +10,12 @@ const userSchema = new mongoose.Schema({
     minlength: 3,
     maxlength: 30
   },
-  email: {
+  mobile: {
     type: String,
     required: true,
     unique: true,
     trim: true,
-    lowercase: true
+    match: /^[0-9]{10}$/
   },
   password: {
     type: String,
@@ -61,7 +61,7 @@ userSchema.methods.toPublicJSON = function() {
   return {
     id: this._id,
     username: this.username,
-    email: this.email,
+    mobile: this.mobile,
     avatar: this.avatar,
     isOnline: this.isOnline,
     lastSeen: this.lastSeen,

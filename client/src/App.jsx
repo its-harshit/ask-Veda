@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react'
-import { Routes, Route } from 'react-router-dom'
+import { Routes, Route, Navigate } from 'react-router-dom'
 import ChatInterface from './components/ChatInterface'
 import Sidebar from './components/Sidebar'
 import ProtectedRoute from './components/ProtectedRoute'
+import AuthContainer from './components/AuthContainer'
 import { ChatProvider } from './context/ChatContext'
 import { SocketProvider } from './context/SocketContext'
 import { AuthProvider } from './context/AuthContext'
@@ -12,18 +13,39 @@ function App() {
 
   return (
     <AuthProvider>
-      <div className="flex h-screen bg-gray-50">
+      <div className="h-screen bg-background-secondary">
         <SocketProvider>
           <ChatProvider>
-            <ProtectedRoute>
-              <Sidebar isOpen={sidebarOpen} setIsOpen={setSidebarOpen} />
-              <div className="flex-1 flex flex-col">
-                <Routes>
-                  <Route path="/" element={<ChatInterface sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />} />
-                  <Route path="/chat/:chatId" element={<ChatInterface sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />} />
-                </Routes>
-              </div>
-            </ProtectedRoute>
+            <Routes>
+              {/* Public routes */}
+              <Route path="/login" element={<AuthContainer />} />
+              <Route path="/register" element={<AuthContainer />} />
+              
+              {/* Protected routes */}
+              <Route path="/" element={
+                <ProtectedRoute>
+                  <div className="flex h-full">
+                    <Sidebar isOpen={sidebarOpen} setIsOpen={setSidebarOpen} />
+                    <div className="flex-1 flex flex-col">
+                      <ChatInterface sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
+                    </div>
+                  </div>
+                </ProtectedRoute>
+              } />
+              <Route path="/chat/:chatId" element={
+                <ProtectedRoute>
+                  <div className="flex h-full">
+                    <Sidebar isOpen={sidebarOpen} setIsOpen={setSidebarOpen} />
+                    <div className="flex-1 flex flex-col">
+                      <ChatInterface sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
+                    </div>
+                  </div>
+                </ProtectedRoute>
+              } />
+              
+              {/* Redirect to home for unknown routes */}
+              <Route path="*" element={<Navigate to="/" replace />} />
+            </Routes>
           </ChatProvider>
         </SocketProvider>
       </div>

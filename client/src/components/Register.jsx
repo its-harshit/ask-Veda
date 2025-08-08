@@ -62,52 +62,51 @@ const Register = ({ onSwitchToLogin }) => {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-white py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8">
-        <div className="text-center">
-          <div className="mx-auto h-16 w-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center mb-6 shadow-lg">
-            <Bot className="h-8 w-8 text-white" />
-          </div>
-          <h2 className="text-3xl font-bold text-gray-900 mb-2">Create account</h2>
-          <p className="text-gray-600">
-            Sign up to get started with askVeda
-          </p>
+    <div className="w-full space-y-8">
+      <div className="text-center">
+        <div className="mx-auto h-16 w-16 bg-gradient-to-br from-primary-500 to-primary-600 rounded-2xl flex items-center justify-center mb-6 shadow-medium">
+          <Bot className="h-8 w-8 text-white" />
         </div>
+        <h2 className="text-3xl font-bold text-text-primary mb-2">Create account</h2>
+        <p className="text-text-secondary">
+          Sign up to get started with askVeda
+        </p>
+      </div>
 
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
-          {error && (
-            <div className="bg-red-50 border border-red-200 rounded-xl p-4">
-              <p className="text-sm text-red-600 font-medium">{error}</p>
-            </div>
-          )}
+      <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
+        {error && (
+          <div className="bg-danger-50 border border-danger-200 rounded-xl p-4">
+            <p className="text-sm text-danger-600 font-medium">{error}</p>
+          </div>
+        )}
 
-          <div className="space-y-4">
-            <div>
-              <label htmlFor="username" className="block text-sm font-semibold text-gray-700 mb-3">
-                Username
-              </label>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                  <User className="h-5 w-5 text-gray-400" />
-                </div>
-                <input
-                  id="username"
-                  name="username"
-                  type="text"
-                  autoComplete="username"
-                  required
-                  value={formData.username}
-                  onChange={handleChange}
-                  className="w-full px-4 py-4 pl-12 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-gray-900 placeholder-gray-500"
-                  placeholder="Enter your username"
-                  minLength={3}
-                  maxLength={30}
-                />
+        <div className="space-y-4">
+          <div>
+            <label htmlFor="username" className="block text-sm font-semibold text-text-secondary mb-3">
+              Username
+            </label>
+            <div className="relative">
+              <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                <User className="h-5 w-5 text-gray-400" />
               </div>
+              <input
+                id="username"
+                name="username"
+                type="text"
+                autoComplete="username"
+                required
+                value={formData.username}
+                onChange={handleChange}
+                className="w-full px-4 py-4 pl-12 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 text-text-primary placeholder-gray-500"
+                placeholder="Enter your username"
+                minLength={3}
+                maxLength={30}
+              />
             </div>
+          </div>
 
                          <div>
-               <label htmlFor="mobile" className="block text-sm font-semibold text-gray-700 mb-3">
+               <label htmlFor="mobile" className="block text-sm font-semibold text-text-secondary mb-3">
                  Mobile number
                </label>
                <div className="relative">
@@ -122,7 +121,7 @@ const Register = ({ onSwitchToLogin }) => {
                    required
                    value={formData.mobile}
                    onChange={handleChange}
-                   className="w-full px-4 py-4 pl-12 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-gray-900 placeholder-gray-500"
+                   className="w-full px-4 py-4 pl-12 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 text-text-primary placeholder-gray-500"
                    placeholder="Enter your mobile number"
                    pattern="[0-9]{10}"
                    maxLength="10"
@@ -131,7 +130,7 @@ const Register = ({ onSwitchToLogin }) => {
              </div>
 
             <div>
-              <label htmlFor="password" className="block text-sm font-semibold text-gray-700 mb-3">
+              <label htmlFor="password" className="block text-sm font-semibold text-text-secondary mb-3">
                 Password
               </label>
               <div className="relative">
@@ -146,7 +145,7 @@ const Register = ({ onSwitchToLogin }) => {
                   required
                   value={formData.password}
                   onChange={handleChange}
-                  className="w-full px-4 py-4 pl-12 pr-12 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-gray-900 placeholder-gray-500"
+                  className="w-full px-4 py-4 pl-12 pr-12 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 text-text-primary placeholder-gray-500"
                   placeholder="Enter your password"
                   minLength={6}
                 />
@@ -165,7 +164,7 @@ const Register = ({ onSwitchToLogin }) => {
             </div>
 
             <div>
-              <label htmlFor="confirmPassword" className="block text-sm font-semibold text-gray-700 mb-3">
+              <label htmlFor="confirmPassword" className="block text-sm font-semibold text-text-secondary mb-3">
                 Confirm Password
               </label>
               <div className="relative">
@@ -180,7 +179,7 @@ const Register = ({ onSwitchToLogin }) => {
                   required
                   value={formData.confirmPassword}
                   onChange={handleChange}
-                  className="w-full px-4 py-4 pl-12 pr-12 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-gray-900 placeholder-gray-500"
+                  className="w-full px-4 py-4 pl-12 pr-12 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 text-text-primary placeholder-gray-500"
                   placeholder="Confirm your password"
                 />
                 <button
@@ -202,7 +201,7 @@ const Register = ({ onSwitchToLogin }) => {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-gradient-to-r from-blue-500 to-purple-600 text-white py-4 px-6 rounded-xl font-semibold hover:from-blue-600 hover:to-purple-700 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+              className="w-full bg-gradient-to-r from-primary-600 to-primary-700 text-white py-4 px-6 rounded-xl font-semibold hover:from-primary-700 hover:to-primary-800 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-medium hover:shadow-large transform hover:-translate-y-0.5"
             >
               {loading ? (
                 <div className="flex items-center justify-center space-x-2">
@@ -216,12 +215,12 @@ const Register = ({ onSwitchToLogin }) => {
           </div>
 
           <div className="text-center pt-4">
-            <p className="text-gray-600">
+            <p className="text-text-secondary">
               Already have an account?{' '}
               <button
                 type="button"
                 onClick={onSwitchToLogin}
-                className="font-semibold text-blue-600 hover:text-blue-700 transition-colors"
+                className="font-semibold text-primary-600 hover:text-primary-700 transition-colors"
               >
                 Sign in
               </button>
@@ -229,8 +228,7 @@ const Register = ({ onSwitchToLogin }) => {
           </div>
         </form>
       </div>
-    </div>
-  )
+    )
 }
 
 export default Register
