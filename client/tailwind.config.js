@@ -14,11 +14,11 @@ export default {
           200: '#c7d2fe',  // Icon background
           300: '#a5b4fc',
           400: '#818cf8',
-          500: '#6366f1',  // Icon color
-          600: '#4f46e5',  // Data values color
-          700: '#4338ca',
-          800: '#3730a3',
-          900: '#312e81',
+          500: '#26387E',  // Main color from image
+          600: '#1e2b64',  // Darker shade
+          700: '#1a234f',
+          800: '#151b3a',
+          900: '#0f1426',
         },
         // Professional grays (matching the image)
         gray: {
@@ -81,7 +81,7 @@ export default {
           primary: '#111827',    // Title text (dark charcoal)
           secondary: '#4b5563',  // Data labels (medium gray)
           tertiary: '#6b7280',
-          accent: '#4f46e5',     // Data values (vibrant blue)
+          accent: '#26387E',     // Data values (matching primary)
           inverse: '#ffffff',
         }
       },

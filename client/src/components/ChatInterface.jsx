@@ -64,7 +64,7 @@ const ChatInterface = ({ sidebarOpen, setSidebarOpen }) => {
     <div className="flex flex-col h-full bg-background-primary">
       {/* Messages Area - Takes up available space */}
       <div className="flex-1 overflow-y-auto px-4 py-6">
-        <div className="max-w-7xl mx-auto">
+        <div className="max-w-6xl mx-auto h-full">
           {messages.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-full text-center">
               {/* Brand */}
@@ -175,53 +175,51 @@ const ChatInterface = ({ sidebarOpen, setSidebarOpen }) => {
         </div>
       </div>
       
-      {/* Input Area - Stuck to Bottom */}
-      {messages.length > 0 && (
-        <div className="border-t border-gray-200 p-4 bg-background-primary">
-          <div className="max-w-4xl mx-auto">
-            <form onSubmit={handleSubmit} className="mb-4">
-              <div className="relative bg-background-primary border border-gray-200 rounded-2xl shadow-medium p-4">
-                <div className="flex items-center space-x-3">
-                  {/* Left Icons */}
-                  <div className="flex items-center space-x-2">
-                    <div className="w-8 h-8 bg-primary-200 rounded-full flex items-center justify-center">
-                      <Search className="w-4 h-4 text-primary-500" />
-                    </div>
-                  </div>
-                  
-                  {/* Input Field */}
-                  <div className="flex-1">
-                    <input
-                      type="text"
-                      placeholder="Ask anything..."
-                      value={inputValue}
-                      onChange={(e) => setInputValue(e.target.value)}
-                      onKeyPress={handleKeyPress}
-                      className="w-full text-lg bg-transparent border-none outline-none placeholder-gray-500 text-text-primary"
-                    />
-                  </div>
-                  
-                  {/* Right Icons */}
-                  <div className="flex items-center space-x-2">
-                    <button 
-                      type="button"
-                      className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center hover:bg-gray-200 transition-colors"
-                    >
-                      <Paperclip className="w-4 h-4 text-gray-500" />
-                    </button>
-                    <button 
-                      type="submit"
-                      className="w-8 h-8 bg-primary-500 rounded-full flex items-center justify-center hover:bg-primary-600 transition-colors"
-                    >
-                      <Send className="w-4 h-4 text-white" />
-                    </button>
+      {/* Input Area - Always present but hidden when no messages */}
+      <div className={`border-t border-gray-200 p-4 bg-background-primary ${messages.length === 0 ? 'hidden' : ''}`}>
+        <div className="max-w-4xl mx-auto">
+          <form onSubmit={handleSubmit} className="mb-4">
+            <div className="relative bg-background-primary border border-gray-200 rounded-2xl shadow-medium p-4">
+              <div className="flex items-center space-x-3">
+                {/* Left Icons */}
+                <div className="flex items-center space-x-2">
+                  <div className="w-8 h-8 bg-primary-200 rounded-full flex items-center justify-center">
+                    <Search className="w-4 h-4 text-primary-500" />
                   </div>
                 </div>
+                
+                {/* Input Field */}
+                <div className="flex-1">
+                  <input
+                    type="text"
+                    placeholder="Ask anything..."
+                    value={inputValue}
+                    onChange={(e) => setInputValue(e.target.value)}
+                    onKeyPress={handleKeyPress}
+                    className="w-full text-lg bg-transparent border-none outline-none placeholder-gray-500 text-text-primary"
+                  />
+                </div>
+                
+                {/* Right Icons */}
+                <div className="flex items-center space-x-2">
+                  <button 
+                    type="button"
+                    className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center hover:bg-gray-200 transition-colors"
+                  >
+                    <Paperclip className="w-4 h-4 text-gray-500" />
+                  </button>
+                  <button 
+                    type="submit"
+                    className="w-8 h-8 bg-primary-500 rounded-full flex items-center justify-center hover:bg-primary-600 transition-colors"
+                  >
+                    <Send className="w-4 h-4 text-white" />
+                  </button>
+                </div>
               </div>
-            </form>
-          </div>
+            </div>
+          </form>
         </div>
-      )}
+      </div>
     </div>
   )
 }
