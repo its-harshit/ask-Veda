@@ -12,7 +12,10 @@ const initialState = {
   isCreatingChat: false,
   isLoadingChats: false,
   error: null,
-  typing: false
+  typing: false,
+  streamingMessageId: null,
+  streamingContent: '',
+  aiTyping: false
 }
 
 const chatReducer = (state, action) => {
@@ -46,6 +49,49 @@ const chatReducer = (state, action) => {
       return { ...state, typing: action.payload }
     case 'CLEAR_MESSAGES':
       return { ...state, messages: [] }
+    case 'START_STREAMING':
+      return { 
+        ...state, 
+        streamingMessageId: action.payload.messageId,
+        streamingContent: ''
+      }
+    case 'UPDATE_STREAMING':
+      return { 
+        ...state, 
+        streamingContent: action.payload.content
+      }
+    case 'STOP_STREAMING':
+      return { 
+        ...state, 
+        streamingMessageId: null,
+        streamingContent: ''
+      }
+    case 'SET_AI_TYPING':
+      return { ...state, aiTyping: action.payload }
+    case 'UPDATE_MESSAGE':
+      console.log('Reducer: UPDATE_MESSAGE', { 
+        messageId: action.payload.messageId, 
+        updates: action.payload.updates,
+        currentMessages: state.messages.length,
+        messageIds: state.messages.map(m => m.id)
+      })
+      const updatedMessages = state.messages.map(msg =>
+        msg.id === action.payload.messageId ? { ...msg, ...action.payload.updates } : msg
+      )
+      console.log('Reducer: Updated messages count:', updatedMessages.length)
+      return {
+        ...state,
+        messages: updatedMessages
+      }
+    case 'REMOVE_DUPLICATES':
+      const uniqueMessages = state.messages.filter((msg, index, self) => 
+        index === self.findIndex(m => m.content === msg.content && m.role === msg.role)
+      )
+      console.log('Reducer: Removed duplicates, messages count:', uniqueMessages.length)
+      return {
+        ...state,
+        messages: uniqueMessages
+      }
     default:
       return state
   }
@@ -57,6 +103,7 @@ export const ChatProvider = ({ children }) => {
   const { token, isAuthenticated } = useAuth()
 
   const addMessage = (message) => {
+    console.log('Adding message:', { messageId: message.id, role: message.role, isStreaming: message.isStreaming })
     dispatch({ type: 'ADD_MESSAGE', payload: message })
   }
 
@@ -103,6 +150,140 @@ export const ChatProvider = ({ children }) => {
   const clearMessages = useCallback(() => {
     dispatch({ type: 'CLEAR_MESSAGES' })
   }, [])
+
+  const startStreaming = (messageId) => {
+    dispatch({ type: 'START_STREAMING', payload: { messageId } })
+  }
+
+  const updateStreamingContent = (content) => {
+    dispatch({ type: 'UPDATE_STREAMING', payload: { content } })
+  }
+
+  const stopStreaming = () => {
+    dispatch({ type: 'STOP_STREAMING' })
+  }
+
+  const setAiTyping = (typing) => {
+    dispatch({ type: 'SET_AI_TYPING', payload: typing })
+  }
+
+  const updateMessage = (messageId, updates) => {
+    console.log('Updating message:', { messageId, updates, currentMessages: state.messages.length })
+    dispatch({ type: 'UPDATE_MESSAGE', payload: { messageId, updates } })
+  }
+
+  const removeDuplicates = () => {
+    console.log('Removing duplicate messages')
+    dispatch({ type: 'REMOVE_DUPLICATES' })
+  }
+
+  // Helper function to generate realistic AI responses
+  const generateAIResponse = (userMessage) => {
+    const responses = [
+      `I understand you're asking about "${userMessage}". Let me provide you with a comprehensive answer. This is a simulated response that demonstrates the streaming functionality. The text appears character by character to create a more engaging user experience.`,
+      
+      `Great question! "${userMessage}" is an interesting topic. Here's what I can tell you: This streaming response shows how modern AI chat interfaces work, with text appearing gradually rather than all at once. It makes the conversation feel more natural and interactive.`,
+      
+      `Thanks for your message: "${userMessage}". I'm here to help! This is a demonstration of streaming output where the response appears progressively. In a real implementation, this would be connected to an AI service like OpenAI's GPT or similar models.`,
+      
+      `I received your query about "${userMessage}". Let me break this down for you: Streaming responses provide a better user experience by showing content as it's generated. This creates anticipation and makes the interaction feel more dynamic and responsive.`
+    ]
+    
+    return responses[Math.floor(Math.random() * responses.length)]
+  }
+
+  // Function to handle real AI streaming (can be connected to OpenAI, Anthropic, etc.)
+  const streamAIResponse = async (userMessage, streamingMessageId, updateContent) => {
+    try {
+      console.log('Starting real AI streaming for message:', userMessage)
+      
+      // Use the real AI streaming endpoint
+      const response = await fetch('/api/ai/stream', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          message: userMessage,
+          chatId: chatId
+        })
+      })
+
+      console.log('AI streaming response status:', response.status, response.statusText)
+
+      if (!response.ok) {
+        throw new Error(`AI streaming error: ${response.status} ${response.statusText}`)
+      }
+
+      const reader = response.body.getReader()
+      const decoder = new TextDecoder()
+      let buffer = ''
+      let fullContent = ''
+
+      while (true) {
+        const { done, value } = await reader.read()
+        if (done) break
+
+        buffer += decoder.decode(value, { stream: true })
+        const lines = buffer.split('\n')
+        buffer = lines.pop()
+
+        for (const line of lines) {
+          if (line.startsWith('data: ')) {
+            const data = line.slice(6)
+            if (data === '[DONE]') {
+              console.log('AI streaming completed')
+              return fullContent
+            }
+            
+            try {
+              const parsed = JSON.parse(data)
+              console.log('Received streaming data:', parsed)
+              if (parsed.content) {
+                fullContent += parsed.content
+                updateContent(fullContent)
+                console.log('Updated content:', fullContent)
+              }
+            } catch (e) {
+              console.error('Error parsing streaming data:', e)
+            }
+          }
+        }
+      }
+      
+      return fullContent
+    } catch (error) {
+      console.error('Error in AI streaming:', error)
+      
+      // Fallback to simulated response if real AI fails
+      console.log('Falling back to simulated response')
+      const aiContent = generateAIResponse(userMessage)
+      
+      // Simulate streaming by adding characters one by one
+      let currentContent = ''
+      for (let i = 0; i < aiContent.length; i++) {
+        currentContent += aiContent[i]
+        updateContent(currentContent)
+        
+        // Much faster streaming speeds
+        let delay = 5 // Base delay (reduced from 30)
+        if (aiContent[i] === ' ') {
+          delay = 2 // Very fast for spaces (reduced from 10)
+        } else if (aiContent[i] === '.' || aiContent[i] === '!' || aiContent[i] === '?') {
+          delay = 15 // Short pause at punctuation (reduced from 100)
+        } else if (aiContent[i] === ',') {
+          delay = 8 // Quick pause for commas (reduced from 50)
+        } else {
+          delay = 3 + Math.random() * 4 // Fast random delay for regular characters (reduced from 30-50)
+        }
+        
+        await new Promise(resolve => setTimeout(resolve, delay))
+      }
+      
+      return aiContent
+    }
+  }
 
   // Check if there's already an empty chat
   const hasEmptyChat = useCallback(() => {
@@ -190,6 +371,10 @@ export const ChatProvider = ({ children }) => {
 
     try {
       setLoading(true)
+      
+      // Preserve any streaming messages before clearing
+      const streamingMessages = state.messages.filter(msg => msg.isStreaming)
+      
       // Clear existing messages first to prevent duplicates
       setMessages([])
       
@@ -202,7 +387,9 @@ export const ChatProvider = ({ children }) => {
 
       if (response.ok) {
         const data = await response.json()
-        setMessages(data.messages)
+        // Combine database messages with any streaming messages
+        const allMessages = [...data.messages, ...streamingMessages]
+        setMessages(allMessages)
       } else {
         setError('Failed to fetch messages')
       }
@@ -212,7 +399,7 @@ export const ChatProvider = ({ children }) => {
     } finally {
       setLoading(false)
     }
-  }, [isAuthenticated, token, setLoading, setMessages, setError])
+  }, [isAuthenticated, token, setLoading, setMessages, setError, state.messages])
 
   const sendMessage = useCallback(async (content, chatId) => {
     if (!isAuthenticated || !token || !chatId) {
@@ -268,49 +455,75 @@ export const ChatProvider = ({ children }) => {
         }
       }
 
-      // Simulate AI response (you can replace this with actual AI integration)
-      setTimeout(async () => {
-        const aiContent = `I received your message: "${content}". This is a simulated response. In a real implementation, this would be connected to an AI service.`
-        
-        // Save AI response to database
-        const aiMessageResponse = await fetch('http://localhost:5000/api/messages', {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            content: aiContent,
-            chatId,
-            role: 'assistant'
-          })
-        })
+      // Show AI typing indicator
+      setAiTyping(true)
+      
+      // Wait a bit to show typing indicator
+      await new Promise(resolve => setTimeout(resolve, 1000 + Math.random() * 1000))
+      
+      // Hide typing indicator and start streaming
+      setAiTyping(false)
+      
+      // Create a temporary AI message for streaming
+      const streamingMessageId = `streaming-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+      const tempAiMessage = {
+        id: streamingMessageId,
+        content: '',
+        role: 'assistant',
+        timestamp: new Date().toISOString(),
+        chatId: chatId,
+        isStreaming: true
+      }
 
-        if (aiMessageResponse.ok) {
-          const aiMessageData = await aiMessageResponse.json()
-          const aiMessage = aiMessageData.messageData
-          
-          // Add AI response to local state
-          addMessage(aiMessage)
-        } else {
-          console.error('Failed to save AI message:', aiMessageResponse.status)
-          // Still add to local state even if database save fails
-          const aiResponse = {
-            id: (Date.now() + 1).toString(),
-            content: aiContent,
-            role: 'assistant',
-            timestamp: new Date().toISOString(),
-            chatId: chatId
-          }
-          addMessage(aiResponse)
-        }
-      }, 1000)
+      // Add temporary AI message to local state
+      addMessage(tempAiMessage)
+      startStreaming(streamingMessageId)
+
+      // Simulate streaming AI response
+      const aiContent = await streamAIResponse(content, streamingMessageId, updateStreamingContent)
+      
+      // Stop streaming and save final message to database
+      stopStreaming()
+      
+      // Always update the streaming message with final content
+      // This ensures we don't create duplicate messages
+      updateMessage(streamingMessageId, { content: aiContent, isStreaming: false })
+      
+      const aiMessageResponse = await fetch('http://localhost:5000/api/messages', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          content: aiContent,
+          chatId,
+          role: 'assistant'
+        })
+      })
+
+      if (aiMessageResponse.ok) {
+        const aiMessageData = await aiMessageResponse.json()
+        const aiMessage = aiMessageData.messageData
+        
+        // Update the existing message with database information
+        console.log('Updating with final message from database:', { streamingMessageId, aiMessage })
+        updateMessage(streamingMessageId, { ...aiMessage, isStreaming: false })
+      } else {
+        console.error('Failed to save AI message:', aiMessageResponse.status)
+        // Message is already updated with content, just ensure it's marked as not streaming
+        console.log('Database save failed, keeping local message:', { streamingMessageId, aiContent })
+      }
+
+      // Remove any duplicate messages that might have been created
+      setTimeout(() => removeDuplicates(), 100)
 
     } catch (error) {
       console.error('Error sending message:', error)
       setError('Network error while sending message')
+      stopStreaming()
     }
-  }, [isAuthenticated, token, addMessage, setError, fetchChats, state.chats])
+  }, [isAuthenticated, token, addMessage, setError, fetchChats, state.chats, startStreaming, updateStreamingContent, stopStreaming, dispatch, state.messages, streamAIResponse])
 
   // Load chats on component mount and when authentication changes
   useEffect(() => {
@@ -323,14 +536,15 @@ export const ChatProvider = ({ children }) => {
   useEffect(() => {
     if (onMessage) {
       const handleMessage = (message) => {
-        // Only add messages that are not from the current user to prevent duplicates
-        if (message.role !== 'user') {
+        // Only add messages that are not from the current user and not already in our state
+        if (message.role !== 'user' && !state.messages.some(msg => msg.id === message.id)) {
+          console.log('Adding socket message:', { messageId: message.id, role: message.role })
           addMessage(message)
         }
       }
       onMessage(handleMessage)
     }
-  }, [onMessage, addMessage])
+  }, [onMessage, addMessage, state.messages])
 
   const value = {
     ...state,
@@ -350,7 +564,14 @@ export const ChatProvider = ({ children }) => {
     fetchChats,
     createChat,
     fetchMessages,
-    hasEmptyChat
+    hasEmptyChat,
+    startStreaming,
+    updateStreamingContent,
+    stopStreaming,
+    setAiTyping,
+    updateMessage,
+    removeDuplicates,
+    streamAIResponse
   }
 
   return (

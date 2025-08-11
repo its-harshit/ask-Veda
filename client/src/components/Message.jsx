@@ -1,9 +1,16 @@
 import React from 'react'
 import ReactMarkdown from 'react-markdown'
 import { format } from 'date-fns'
+import { useChat } from '../context/ChatContext'
 
 const Message = ({ message }) => {
   const isUser = message.role === 'user'
+  const { streamingMessageId, streamingContent } = useChat()
+  
+  // Use streaming content if this message is currently streaming
+  const displayContent = message.isStreaming && streamingMessageId === message.id 
+    ? streamingContent 
+    : message.content
 
   const components = {
     code: ({ node, inline, className, children, ...props }) => {
@@ -40,11 +47,16 @@ const Message = ({ message }) => {
             : 'bg-background-tertiary text-text-primary'
         }`}>
           {isUser ? (
-            <span className="text-white break-words">{message.content}</span>
+            <span className="text-white break-words">{displayContent}</span>
           ) : (
-            <ReactMarkdown components={components} className="max-w-none">
-              {message.content}
-            </ReactMarkdown>
+            <div className="max-w-none">
+              <ReactMarkdown components={components}>
+                {displayContent}
+              </ReactMarkdown>
+              {message.isStreaming && streamingMessageId === message.id && (
+                <span className="inline-block w-2 h-4 bg-primary-500 ml-1 streaming-cursor"></span>
+              )}
+            </div>
           )}
         </div>
         

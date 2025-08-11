@@ -8,7 +8,7 @@ import { Menu, Plus, Send, Bot, User, Search, Paperclip } from 'lucide-react'
 import npciLogo from '../assets/npci-logo.jpg'
 
 const ChatInterface = ({ sidebarOpen, setSidebarOpen }) => {
-  const { messages, isLoading, typing, sendMessage, chats, fetchMessages, clearMessages } = useChat()
+  const { messages, isLoading, typing, aiTyping, sendMessage, chats, fetchMessages, clearMessages } = useChat()
   const { isConnected } = useSocket()
   const { isAuthenticated } = useAuth()
   const { chatId } = useParams()
@@ -156,7 +156,7 @@ const ChatInterface = ({ sidebarOpen, setSidebarOpen }) => {
               <MessageList messages={messages} />
               
               {/* Typing indicator */}
-              {typing && (
+              {(typing || aiTyping) && (
                 <div className="flex items-center space-x-2 p-4">
                   <div className="w-8 h-8 bg-background-tertiary rounded-full flex items-center justify-center">
                     <Bot className="w-4 h-4 text-primary-500" />

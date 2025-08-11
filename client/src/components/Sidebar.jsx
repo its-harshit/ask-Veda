@@ -91,13 +91,13 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
       </div>
 
       {/* Sidebar */}
-      <div className={`${isOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0 fixed md:static inset-y-0 left-0 z-40 w-16 md:w-20 hover:w-80 bg-background-primary border-r border-gray-200 transform transition-all duration-300 ease-in-out group`}>
+      <div className={`${isOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0 fixed md:static inset-y-0 left-0 z-40 w-14 md:w-18 hover:w-80 bg-background-primary border-r border-gray-200 transform transition-all duration-300 ease-in-out group`}>
         <div className="flex flex-col h-full">
           <div className="p-4 border-b border-gray-200">
             <img 
               src={npciLogo} 
               alt="NPCI Logo" 
-              className="w-full rounded-lg transition-all duration-300 ease-in-out group-hover:opacity-0"
+              className="w-12 rounded-lg transition-all duration-300 ease-in-out group-hover:opacity-0"
             />
             <img 
               src={npciLogoExpanded} 
@@ -138,7 +138,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
 
           {/* Chat History */}
           <div className="flex-1 overflow-y-auto p-4 scrollbar-hide">
-            <div className="space-y-2">
+            <div className="">
               {isLoadingChats ? (
                 <div className="flex items-center justify-center py-4">
                   <div className="animate-spin rounded-full h-6 w-6 border-2 border-primary-500 border-t-transparent"></div>
@@ -154,7 +154,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
                   <div
                     key={chat.id}
                     onClick={() => handleChatClick(chat)}
-                    className={`flex items-center space-x-3 p-3 rounded-lg hover:bg-background-tertiary transition-colors cursor-pointer ${
+                    className={`flex items-center space-x-3 p-1 group-hover:p-2 rounded-lg hover:bg-background-tertiary transition-all duration-200 cursor-pointer ${
                       chatId === chat.id ? 'bg-background-tertiary shadow-soft border border-primary-200' : ''
                     } ${isEmptyChat(chat) ? 'border-l-4 border-l-primary-500' : ''}`}
                   >
