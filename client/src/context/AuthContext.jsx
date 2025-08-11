@@ -63,6 +63,8 @@ export const AuthProvider = ({ children }) => {
         setSessionId(data.sessionId)
         localStorage.setItem('token', data.token)
         localStorage.setItem('sessionId', data.sessionId)
+        // Set a flag to create new chat after login
+        localStorage.setItem('shouldCreateNewChat', 'true')
         navigate('/')
         return { success: true }
       } else {
@@ -92,6 +94,8 @@ export const AuthProvider = ({ children }) => {
         setSessionId(data.sessionId)
         localStorage.setItem('token', data.token)
         localStorage.setItem('sessionId', data.sessionId)
+        // Set a flag to create new chat after registration
+        localStorage.setItem('shouldCreateNewChat', 'true')
         navigate('/')
         return { success: true }
       } else {

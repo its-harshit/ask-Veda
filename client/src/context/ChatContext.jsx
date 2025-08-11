@@ -1,4 +1,5 @@
-import React, { createContext, useContext, useReducer, useEffect, useCallback } from 'react'
+import React, { createContext, useContext, useReducer, useEffect, useCallback, useState, useRef } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useSocket } from './SocketContext'
 import { useAuth } from './AuthContext'
 
@@ -101,6 +102,9 @@ export const ChatProvider = ({ children }) => {
   const [state, dispatch] = useReducer(chatReducer, initialState)
   const { onMessage, sendMessage: socketSendMessage } = useSocket()
   const { token, isAuthenticated } = useAuth()
+  const navigate = useNavigate()
+  const [isCreatingLoginChat, setIsCreatingLoginChat] = useState(false)
+  const loginChatProcessedRef = useRef(false)
 
   const addMessage = (message) => {
     console.log('Adding message:', { messageId: message.id, role: message.role, isStreaming: message.isStreaming })
@@ -327,11 +331,11 @@ export const ChatProvider = ({ children }) => {
     }
   }, [isAuthenticated, token, setLoadingChats, setChats, setError])
 
-  const createChat = useCallback(async (title = 'New Chat') => {
+  const createChat = useCallback(async (title = 'New Chat', skipEmptyCheck = false) => {
     if (!isAuthenticated || !token) return null
 
-    // Check if there's already an empty chat
-    if (hasEmptyChat()) {
+    // Check if there's already an empty chat (unless we're skipping this check)
+    if (!skipEmptyCheck && hasEmptyChat()) {
       setError('You already have an empty chat. Please use that one first.')
       return null
     }
@@ -531,6 +535,40 @@ export const ChatProvider = ({ children }) => {
       fetchChats()
     }
   }, [isAuthenticated, token])
+
+  // Check if we should create a new chat after login/registration
+  useEffect(() => {
+    const shouldCreateNewChat = localStorage.getItem('shouldCreateNewChat')
+    if (shouldCreateNewChat === 'true' && isAuthenticated && token && !isCreatingLoginChat && !loginChatProcessedRef.current) {
+      setIsCreatingLoginChat(true)
+      loginChatProcessedRef.current = true
+      // Clear the flag immediately to prevent multiple triggers
+      localStorage.removeItem('shouldCreateNewChat')
+      
+      // Small delay to ensure chats are loaded first
+      setTimeout(async () => {
+        try {
+          // Always create a new chat after login, regardless of empty chats
+          const newChat = await createChat('New Chat', true) // Skip empty check for post-login chat
+          if (newChat) {
+            // Navigate to the new chat
+            navigate(`/chat/${newChat.id}`)
+          }
+        } catch (error) {
+          console.error('Error creating login chat:', error)
+        } finally {
+          setIsCreatingLoginChat(false)
+        }
+      }, 500)
+    }
+  }, [isAuthenticated, token, isCreatingLoginChat, createChat, navigate])
+
+  // Reset the login chat processed flag when user logs out
+  useEffect(() => {
+    if (!isAuthenticated) {
+      loginChatProcessedRef.current = false
+    }
+  }, [isAuthenticated])
 
   // Handle incoming socket messages
   useEffect(() => {

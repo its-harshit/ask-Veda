@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { Plus, MessageSquare, Settings, User, LogOut, Search, AlertTriangle, HelpCircle, Menu, Info } from 'lucide-react'
+import { Plus, MessageSquare, Settings, User, LogOut, AlertTriangle, HelpCircle, Menu, Info } from 'lucide-react'
 import { useChat } from '../context/ChatContext'
 import { useAuth } from '../context/AuthContext'
 import { useNavigate, useParams } from 'react-router-dom'
@@ -14,8 +14,21 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
   const { chatId } = useParams()
   const [showMobileMenu, setShowMobileMenu] = useState(false)
   const [showError, setShowError] = useState(false)
+  const [hoveredSection, setHoveredSection] = useState(null)
+  const [isHovering, setIsHovering] = useState(false)
 
   const handleNewChat = async () => {
+    // If there's already an empty chat, navigate to it instead of creating a new one
+    if (hasEmptyChat()) {
+      const emptyChat = chats.find(chat => chat.messageCount === 0 || !chat.lastMessage || !chat.lastMessage.content)
+      if (emptyChat) {
+        navigate(`/chat/${emptyChat.id}`)
+        setShowMobileMenu(false)
+        return
+      }
+    }
+    
+    // Create new chat only if no empty chat exists
     const newChat = await createChat('New Chat')
     if (newChat) {
       clearMessages()
@@ -90,147 +103,331 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
         </button>
       </div>
 
-      {/* Sidebar */}
-      <div className={`${isOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0 fixed md:static inset-y-0 left-0 z-40 w-14 md:w-18 hover:w-80 bg-background-primary border-r border-gray-200 transform transition-all duration-300 ease-in-out group`}>
-        <div className="flex flex-col h-full">
-          <div className="p-4 border-b border-gray-200">
-            <img 
-              src={npciLogo} 
-              alt="NPCI Logo" 
-              className="w-12 rounded-lg transition-all duration-300 ease-in-out group-hover:opacity-0"
-            />
-            <img 
-              src={npciLogoExpanded} 
-              alt="NPCI Logo" 
-              className="w-32 h-16 rounded-lg absolute top-4 left-4 transition-all duration-300 ease-in-out opacity-0 group-hover:opacity-100 object-contain"
-            />
-          </div>
-
-          {/* Header */}
-          <div className="p-4 border-b border-gray-200">
-            <button
-              onClick={handleNewChat}
-              disabled={isCreatingChat || hasEmptyChat()}
-              className="w-full h-10 rounded-xl flex items-center justify-center transition-all duration-200 shadow-medium hover:shadow-large transform hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed group-hover:bg-gradient-to-r group-hover:from-primary-500 group-hover:to-primary-600 group-hover:text-white"
-              title={hasEmptyChat() ? "You already have an empty chat. Use that one first." : "Create new chat"}
-            >
-              {/* Collapsed state - Light circle with dark plus */}
-              <div className="mt-1 w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center group-hover:hidden">
-                <Plus className="w-4 h-4 text-gray-700" />
-              </div>
-              
-              {/* Expanded state - Original gradient design */}
-              <span className="hidden group-hover:block opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap">
-                {isCreatingChat ? 'Creating...' : hasEmptyChat() ? 'New Chat' : 'New Chat'}
-              </span>
-            </button>
-            
-            {/* Error message */}
-            {showError && error && (
-              <div className="mt-2 p-2 bg-warning-50 border border-warning-200 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                <div className="flex items-center space-x-2">
-                  <Info className="w-4 h-4 text-warning-600" />
-                  <p className="text-xs text-warning-700">{error}</p>
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* Chat History */}
-          <div className="flex-1 overflow-y-auto p-4 scrollbar-hide">
-            <div className="">
-              {isLoadingChats ? (
-                <div className="flex items-center justify-center py-4">
-                  <div className="animate-spin rounded-full h-6 w-6 border-2 border-primary-500 border-t-transparent"></div>
-                </div>
-              ) : chats.length === 0 ? (
-                <div className="text-center py-8 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                  <MessageSquare className="w-8 h-8 text-gray-400 mx-auto mb-2" />
-                  <p className="text-sm text-text-secondary">No chats yet</p>
-                  <p className="text-xs text-gray-400 mt-1">Create your first chat!</p>
-                </div>
-              ) : (
-                chats.map((chat) => (
-                  <div
-                    key={chat.id}
-                    onClick={() => handleChatClick(chat)}
-                    className={`flex items-center space-x-3 p-1 group-hover:p-2 rounded-lg hover:bg-background-tertiary transition-all duration-200 cursor-pointer ${
-                      chatId === chat.id ? 'bg-background-tertiary shadow-soft border border-primary-200' : ''
-                    } ${isEmptyChat(chat) ? 'border-l-4 border-l-primary-500' : ''}`}
-                  >
-                    <MessageSquare className={`w-4 h-4 flex-shrink-0 ${
-                      chatId === chat.id ? 'text-primary-500' : isEmptyChat(chat) ? 'text-primary-500' : 'text-gray-500'
-                    }`} />
-                    <div className="flex-1 min-w-0 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                      <p className={`text-sm font-medium truncate ${
-                        chatId === chat.id ? 'text-text-accent' : isEmptyChat(chat) ? 'text-text-accent' : 'text-text-primary'
-                      }`}>
-                        {getChatTitle(chat)}
-                        {isEmptyChat(chat) && (
-                          <span className="ml-1 text-xs text-primary-500">(Empty)</span>
-                        )}
-                      </p>
-                      <p className="text-xs text-text-secondary">
-                        {formatDate(chat.createdAt)}
-                      </p>
-                    </div>
-                  </div>
-                ))
-              )}
+      {/* Hover Container - includes both sidebar and pane area */}
+      <div 
+        className={`${isOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0 fixed md:static inset-y-0 left-0 z-40 transform transition-all duration-300 ease-in-out`}
+        style={{ 
+          width: isHovering && hoveredSection ? '320px' : '64px',
+          transition: 'width 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
+        }}
+        onMouseEnter={() => setIsHovering(true)}
+        onMouseLeave={() => {
+          setIsHovering(false)
+          setHoveredSection(null)
+        }}
+      >
+        {/* Main Sidebar - Always narrow */}
+        <div className="w-16 h-full bg-background-primary border-r border-gray-200">
+          <div className="flex flex-col h-full">
+            {/* Logo */}
+            <div className="p-3 border-b border-gray-200 flex justify-center">
+              <img 
+                src={npciLogo} 
+                alt="NPCI Logo" 
+                className="w-8 h-8 rounded-lg object-contain"
+              />
             </div>
-          </div>
 
-          {/* Footer */}
-          <div className="p-4 border-t border-gray-200 space-y-2">
-            {/* Complaints and Help - Placeholder buttons */}
-            <button className="flex items-center space-x-3 px-1 py-3 rounded-xl hover:bg-background-tertiary transition-colors cursor-pointer w-full group-hover:justify-start">
-              <AlertTriangle className="w-5 h-5 text-gray-500 flex-shrink-0" />
-              <span className="text-sm whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200">Complaints</span>
-            </button>
-            
-            <button className="flex items-center space-x-3 px-1 py-3 rounded-xl hover:bg-background-tertiary transition-colors cursor-pointer w-full group-hover:justify-start">
-              <HelpCircle className="w-5 h-5 text-gray-500 flex-shrink-0" />
-              <span className="text-sm whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200">Help</span>
-            </button>
-
-            {/* User Info */}
-            <button className="flex items-center space-x-3 px-1 py-3 rounded-xl hover:bg-background-tertiary transition-colors cursor-pointer w-full group-hover:justify-start">
-              <div className="w-5 h-5 bg-gradient-to-br from-primary-500 to-primary-600 rounded-full flex items-center justify-center flex-shrink-0">
-                <span className="text-white font-semibold text-xs">
-                  {user?.username?.charAt(0).toUpperCase() || 'U'}
-                </span>
+            {/* Navigation Icons */}
+            <div className="flex-1 p-2 space-y-1">
+              {/* Complaints */}
+              <div
+                className="relative"
+                onMouseEnter={() => setHoveredSection('complaints')}
+              >
+                <button className="w-full p-3 rounded-lg hover:bg-background-tertiary transition-all duration-200 cursor-pointer flex justify-center hover:scale-105">
+                  <AlertTriangle className="w-5 h-5 text-gray-600 transition-colors duration-200" />
+                </button>
               </div>
-              <span className="text-sm whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200">Account</span>
-            </button>
-            
-            <button className="flex items-center space-x-3 px-1 py-3 rounded-xl hover:bg-background-tertiary transition-colors cursor-pointer w-full group-hover:justify-start">
-              <Settings className="w-5 h-5 text-gray-500 flex-shrink-0" />
-              <span className="text-sm whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200">Settings</span>
-            </button>
-            
-            <button className="flex items-center space-x-3 px-1 py-3 rounded-xl hover:bg-background-tertiary transition-colors cursor-pointer w-full group-hover:justify-start">
-              <User className="w-5 h-5 text-gray-500 flex-shrink-0" />
-              <span className="text-sm whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200">Profile</span>
-            </button>
-            
-            <button 
-              onClick={handleLogout}
-              className="flex items-center space-x-3 px-1 py-3 rounded-xl hover:bg-danger-50 transition-colors cursor-pointer w-full text-danger-600 hover:text-danger-700 group-hover:justify-start"
-            >
-              <LogOut className="w-5 h-5 flex-shrink-0" />
-              <span className="text-sm whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200">Logout</span>
-            </button>
+
+              {/* New Chat */}
+              <div
+                className="relative"
+                onMouseEnter={() => setHoveredSection('newchat')}
+              >
+                <button
+                  onClick={handleNewChat}
+                  disabled={isCreatingChat}
+                  className="w-full p-3 rounded-lg hover:bg-background-tertiary transition-all duration-200 cursor-pointer flex justify-center disabled:opacity-50 hover:scale-105 disabled:hover:scale-100"
+                >
+                  <Plus className="w-5 h-5 text-gray-600 transition-colors duration-200" />
+                </button>
+              </div>
+
+              {/* Chat History */}
+              <div
+                className="relative"
+                onMouseEnter={() => setHoveredSection('chats')}
+              >
+                <button className="w-full p-3 rounded-lg hover:bg-background-tertiary transition-all duration-200 cursor-pointer flex justify-center hover:scale-105">
+                  <MessageSquare className="w-5 h-5 text-gray-600 transition-colors duration-200" />
+                </button>
+              </div>
+            </div>
+
+            {/* Bottom Icons */}
+            <div className="p-2 border-t border-gray-200 space-y-1">
+              {/* Help */}
+              <div
+                className="relative"
+                onMouseEnter={() => setHoveredSection('help')}
+              >
+                <button className="w-full p-3 rounded-lg hover:bg-background-tertiary transition-all duration-200 cursor-pointer flex justify-center hover:scale-105">
+                  <HelpCircle className="w-5 h-5 text-gray-600 transition-colors duration-200" />
+                </button>
+              </div>
+
+              {/* Settings */}
+              <div
+                className="relative"
+                onMouseEnter={() => setHoveredSection('settings')}
+              >
+                <button className="w-full p-3 rounded-lg hover:bg-background-tertiary transition-all duration-200 cursor-pointer flex justify-center hover:scale-105">
+                  <Settings className="w-5 h-5 text-gray-600 transition-colors duration-200" />
+                </button>
+              </div>
+
+              {/* User Profile */}
+              <div
+                className="relative"
+                onMouseEnter={() => setHoveredSection('profile')}
+              >
+                <button className="w-full p-3 rounded-lg hover:bg-background-tertiary transition-all duration-200 cursor-pointer flex justify-center hover:scale-105">
+                  <div className="w-5 h-5 bg-gradient-to-br from-primary-500 to-primary-600 rounded-full flex items-center justify-center transition-transform duration-200">
+                    <span className="text-white font-semibold text-xs">
+                      {user?.username?.charAt(0).toUpperCase() || 'U'}
+                    </span>
+                  </div>
+                </button>
+              </div>
+            </div>
           </div>
         </div>
 
-        {/* Mobile overlay */}
-        {isOpen && (
-          <div
-            className="md:hidden fixed inset-0 bg-black bg-opacity-50 z-30"
-            onClick={() => setIsOpen(false)}
-          />
+        {/* Hover Pane - Inside the same container */}
+        {isHovering && hoveredSection && (
+          <div 
+            className="absolute left-16 top-0 h-full w-64 bg-background-primary border-r border-gray-200 shadow-xl transform transition-all duration-300 ease-out"
+            style={{
+              opacity: isHovering && hoveredSection ? 1 : 0,
+              transform: `translateX(${isHovering && hoveredSection ? '0' : '-20px'})`,
+              transition: 'opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1), transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
+            }}
+          >
+            {/* Complaints Section */}
+            {hoveredSection === 'complaints' && (
+              <div className="p-6 h-full animate-fade-in">
+                <div className="flex items-center space-x-3 mb-6 animate-slide-down">
+                  <AlertTriangle className="w-6 h-6 text-primary-500" />
+                  <h2 className="text-lg font-semibold text-text-primary">Complaints</h2>
+                </div>
+                <div className="space-y-4 animate-slide-up-stagger">
+                  <div className="p-4 bg-background-tertiary rounded-lg">
+                    <h3 className="font-medium text-text-primary mb-2">Payment Issues</h3>
+                    <p className="text-sm text-text-secondary">Report payment failures or disputes</p>
+                  </div>
+                  <div className="p-4 bg-background-tertiary rounded-lg">
+                    <h3 className="font-medium text-text-primary mb-2">Service Quality</h3>
+                    <p className="text-sm text-text-secondary">Issues with AI responses or service</p>
+                  </div>
+                  <div className="p-4 bg-background-tertiary rounded-lg">
+                    <h3 className="font-medium text-text-primary mb-2">Technical Problems</h3>
+                    <p className="text-sm text-text-secondary">App bugs or technical difficulties</p>
+                  </div>
+                  <div className="p-4 bg-background-tertiary rounded-lg">
+                    <h3 className="font-medium text-text-primary mb-2">Other Issues</h3>
+                    <p className="text-sm text-text-secondary">General complaints and feedback</p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+          {/* New Chat Section */}
+          {hoveredSection === 'newchat' && (
+            <div className="p-6 h-full animate-fade-in">
+              <div className="flex items-center space-x-3 mb-6 animate-slide-down">
+                <Plus className="w-6 h-6 text-primary-500" />
+                <h2 className="text-lg font-semibold text-text-primary">Create New Chat</h2>
+              </div>
+              <div className="space-y-4 animate-slide-up-stagger">
+                <button
+                  onClick={handleNewChat}
+                  disabled={isCreatingChat}
+                  className="w-full p-4 bg-gradient-to-r from-primary-500 to-primary-600 text-white rounded-lg hover:from-primary-600 hover:to-primary-700 transition-all duration-200 shadow-medium hover:shadow-large transform hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isCreatingChat ? 'Creating...' : hasEmptyChat() ? 'Go to Empty Chat' : 'New Chat'}
+                </button>
+                
+                {showError && error && (
+                  <div className="p-3 bg-warning-50 border border-warning-200 rounded-lg">
+                    <div className="flex items-center space-x-2">
+                      <Info className="w-4 h-4 text-warning-600" />
+                      <p className="text-sm text-warning-700">{error}</p>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Chat History Section */}
+          {hoveredSection === 'chats' && (
+            <div className="p-6 h-full flex flex-col animate-fade-in">
+              <div className="flex items-center space-x-3 mb-6 animate-slide-down">
+                <MessageSquare className="w-6 h-6 text-primary-500" />
+                <h2 className="text-lg font-semibold text-text-primary">Chat History</h2>
+              </div>
+              
+              <div className="flex-1 overflow-y-auto space-y-2 animate-slide-up-stagger">
+                {isLoadingChats ? (
+                  <div className="flex items-center justify-center py-8">
+                    <div className="animate-spin rounded-full h-6 w-6 border-2 border-primary-500 border-t-transparent"></div>
+                  </div>
+                ) : chats.length === 0 ? (
+                  <div className="text-center py-8">
+                    <MessageSquare className="w-8 h-8 text-gray-400 mx-auto mb-2" />
+                    <p className="text-sm text-text-secondary">No chats yet</p>
+                    <p className="text-xs text-gray-400 mt-1">Create your first chat!</p>
+                  </div>
+                ) : (
+                  chats.map((chat) => (
+                    <div
+                      key={chat.id}
+                      onClick={() => handleChatClick(chat)}
+                      className={`p-3 rounded-lg hover:bg-background-tertiary transition-colors cursor-pointer ${
+                        chatId === chat.id ? 'bg-background-tertiary border border-primary-200' : ''
+                      } ${isEmptyChat(chat) ? 'border-l-4 border-l-primary-500' : ''}`}
+                    >
+                      <div className="flex items-start space-x-3">
+                        <MessageSquare className={`w-4 h-4 flex-shrink-0 mt-0.5 ${
+                          chatId === chat.id ? 'text-primary-500' : isEmptyChat(chat) ? 'text-primary-500' : 'text-gray-500'
+                        }`} />
+                        <div className="flex-1 min-w-0">
+                          <p className={`text-sm font-medium truncate ${
+                            chatId === chat.id ? 'text-text-accent' : isEmptyChat(chat) ? 'text-text-accent' : 'text-text-primary'
+                          }`}>
+                            {getChatTitle(chat)}
+                            {isEmptyChat(chat) && (
+                              <span className="ml-1 text-xs text-primary-500">(Empty)</span>
+                            )}
+                          </p>
+                          <p className="text-xs text-text-secondary mt-1">
+                            {formatDate(chat.createdAt)}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Help Section */}
+          {hoveredSection === 'help' && (
+            <div className="p-6 h-full animate-fade-in">
+              <div className="flex items-center space-x-3 mb-6 animate-slide-down">
+                <HelpCircle className="w-6 h-6 text-primary-500" />
+                <h2 className="text-lg font-semibold text-text-primary">Help & Support</h2>
+              </div>
+              <div className="space-y-4 animate-slide-up-stagger">
+                <div className="p-4 bg-background-tertiary rounded-lg">
+                  <h3 className="font-medium text-text-primary mb-2">FAQ</h3>
+                  <p className="text-sm text-text-secondary">Frequently asked questions</p>
+                </div>
+                <div className="p-4 bg-background-tertiary rounded-lg">
+                  <h3 className="font-medium text-text-primary mb-2">Contact Support</h3>
+                  <p className="text-sm text-text-secondary">Get help from our team</p>
+                </div>
+                <div className="p-4 bg-background-tertiary rounded-lg">
+                  <h3 className="font-medium text-text-primary mb-2">Documentation</h3>
+                  <p className="text-sm text-text-secondary">Learn how to use askVeda</p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Settings Section */}
+          {hoveredSection === 'settings' && (
+            <div className="p-6 h-full animate-fade-in">
+              <div className="flex items-center space-x-3 mb-6 animate-slide-down">
+                <Settings className="w-6 h-6 text-primary-500" />
+                <h2 className="text-lg font-semibold text-text-primary">Settings</h2>
+              </div>
+              <div className="space-y-4 animate-slide-up-stagger">
+                <div className="p-4 bg-background-tertiary rounded-lg">
+                  <h3 className="font-medium text-text-primary mb-2">Preferences</h3>
+                  <p className="text-sm text-text-secondary">Customize your experience</p>
+                </div>
+                <div className="p-4 bg-background-tertiary rounded-lg">
+                  <h3 className="font-medium text-text-primary mb-2">Privacy</h3>
+                  <p className="text-sm text-text-secondary">Manage your privacy settings</p>
+                </div>
+                <div className="p-4 bg-background-tertiary rounded-lg">
+                  <h3 className="font-medium text-text-primary mb-2">Account</h3>
+                  <p className="text-sm text-text-secondary">Account management</p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Profile Section */}
+          {hoveredSection === 'profile' && (
+            <div className="p-6 h-full animate-fade-in">
+              <div className="flex items-center space-x-3 mb-6 animate-slide-down">
+                <div className="w-6 h-6 bg-gradient-to-br from-primary-500 to-primary-600 rounded-full flex items-center justify-center">
+                  <span className="text-white font-semibold text-xs">
+                    {user?.username?.charAt(0).toUpperCase() || 'U'}
+                  </span>
+                </div>
+                <h2 className="text-lg font-semibold text-text-primary">Profile</h2>
+              </div>
+              
+              <div className="space-y-4 animate-slide-up-stagger">
+                <div className="p-4 bg-background-tertiary rounded-lg">
+                  <h3 className="font-medium text-text-primary mb-1">{user?.username || 'User'}</h3>
+                  <p className="text-sm text-text-secondary">{user?.mobile || 'No phone number'}</p>
+                </div>
+                
+                <div className="space-y-2">
+                  <button className="w-full p-3 text-left rounded-lg hover:bg-background-tertiary transition-colors">
+                    <div className="flex items-center space-x-3">
+                      <User className="w-4 h-4 text-gray-500" />
+                      <span className="text-sm text-text-primary">Edit Profile</span>
+                    </div>
+                  </button>
+                  
+                  <button className="w-full p-3 text-left rounded-lg hover:bg-background-tertiary transition-colors">
+                    <div className="flex items-center space-x-3">
+                      <AlertTriangle className="w-4 h-4 text-gray-500" />
+                      <span className="text-sm text-text-primary">Complaints</span>
+                    </div>
+                  </button>
+                  
+                  <button 
+                    onClick={handleLogout}
+                    className="w-full p-3 text-left rounded-lg hover:bg-danger-50 transition-colors text-danger-600 hover:text-danger-700"
+                  >
+                    <div className="flex items-center space-x-3">
+                      <LogOut className="w-4 h-4" />
+                      <span className="text-sm">Logout</span>
+                    </div>
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+          </div>
         )}
       </div>
+
+      {/* Mobile overlay */}
+      {isOpen && (
+        <div
+          className="md:hidden fixed inset-0 bg-black bg-opacity-50 z-30"
+          onClick={() => setIsOpen(false)}
+        />
+      )}
 
       {/* Mobile menu */}
       {showMobileMenu && (
@@ -256,11 +453,11 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
               <div className="p-4 border-b border-gray-200">
                 <button
                   onClick={handleNewChat}
-                  disabled={isCreatingChat || hasEmptyChat()}
+                  disabled={isCreatingChat}
                   className="w-full h-10 bg-gradient-to-r from-primary-500 to-primary-600 text-white rounded-xl flex items-center justify-center hover:from-primary-600 hover:to-primary-700 transition-all duration-200 shadow-medium hover:shadow-large transform hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed"
-                  title={hasEmptyChat() ? "You already have an empty chat. Use that one first." : "Create new chat"}
+                  title={hasEmptyChat() ? "Navigate to existing empty chat" : "Create new chat"}
                 >
-                  {isCreatingChat ? 'Creating...' : hasEmptyChat() ? 'Empty Chat Exists' : 'New Chat'}
+                  {isCreatingChat ? 'Creating...' : hasEmptyChat() ? 'Go to Empty Chat' : 'New Chat'}
                 </button>
                 
                 {/* Error message for mobile */}
