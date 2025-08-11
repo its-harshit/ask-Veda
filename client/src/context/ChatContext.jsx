@@ -2,6 +2,7 @@ import React, { createContext, useContext, useReducer, useEffect, useCallback, u
 import { useNavigate } from 'react-router-dom'
 import { useSocket } from './SocketContext'
 import { useAuth } from './AuthContext'
+import { API_CONFIG, generateSessionId } from '../config/api'
 
 const ChatContext = createContext()
 
@@ -196,72 +197,66 @@ export const ChatProvider = ({ children }) => {
     return responses[Math.floor(Math.random() * responses.length)]
   }
 
-  // Function to handle real AI streaming (can be connected to OpenAI, Anthropic, etc.)
-  const streamAIResponse = async (userMessage, streamingMessageId, updateContent) => {
+  // Function to handle AI streaming with FastAPI integration and fallback
+  const streamAIResponse = async (userMessage, streamingMessageId, updateContent, imageData = null) => {
+    console.log('Starting AI streaming for message:', userMessage)
+    
+    // Generate session ID for this conversation
+    const sessionId = generateSessionId()
+    
     try {
-      console.log('Starting real AI streaming for message:', userMessage)
+      // Try FastAPI endpoint first
+      console.log('Attempting FastAPI connection to:', `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.STREAM}`)
       
-      // Use the real AI streaming endpoint
-      const response = await fetch('/api/ai/stream', {
+      const response = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.STREAM}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({
-          message: userMessage,
-          chatId: chatId
-        })
-      })
-
-      console.log('AI streaming response status:', response.status, response.statusText)
+          session_id: sessionId,
+          query: JSON.stringify({
+            text: userMessage,
+            image_base64: imageData || ""
+          })
+        }),
+      });
 
       if (!response.ok) {
-        throw new Error(`AI streaming error: ${response.status} ${response.statusText}`)
+        throw new Error(`HTTP error! status: ${response.status}`);
       }
 
-      const reader = response.body.getReader()
-      const decoder = new TextDecoder()
-      let buffer = ''
-      let fullContent = ''
+      // Handle streaming response from FastAPI
+      const reader = response.body?.getReader();
+      if (!reader) {
+        throw new Error('No response body from FastAPI');
+      }
 
+      let assistantResponse = '';
+      const decoder = new TextDecoder();
+
+      console.log('Successfully connected to FastAPI, starting stream...')
+
+      // Read the stream
       while (true) {
-        const { done, value } = await reader.read()
-        if (done) break
-
-        buffer += decoder.decode(value, { stream: true })
-        const lines = buffer.split('\n')
-        buffer = lines.pop()
-
-        for (const line of lines) {
-          if (line.startsWith('data: ')) {
-            const data = line.slice(6)
-            if (data === '[DONE]') {
-              console.log('AI streaming completed')
-              return fullContent
-            }
-            
-            try {
-              const parsed = JSON.parse(data)
-              console.log('Received streaming data:', parsed)
-              if (parsed.content) {
-                fullContent += parsed.content
-                updateContent(fullContent)
-                console.log('Updated content:', fullContent)
-              }
-            } catch (e) {
-              console.error('Error parsing streaming data:', e)
-            }
-          }
-        }
+        const { done, value } = await reader.read();
+        
+        if (done) break;
+        
+        const chunk = decoder.decode(value);
+        assistantResponse += chunk;
+        
+        // Update content in real-time
+        updateContent(assistantResponse);
       }
-      
-      return fullContent
+
+      console.log('FastAPI streaming completed successfully')
+      return assistantResponse;
+
     } catch (error) {
-      console.error('Error in AI streaming:', error)
+      console.warn('FastAPI connection failed, falling back to simulated response:', error.message)
       
-      // Fallback to simulated response if real AI fails
-      console.log('Falling back to simulated response')
+      // Fallback to simulated response
       const aiContent = generateAIResponse(userMessage)
       
       // Simulate streaming by adding characters one by one
@@ -270,21 +265,22 @@ export const ChatProvider = ({ children }) => {
         currentContent += aiContent[i]
         updateContent(currentContent)
         
-        // Much faster streaming speeds
-        let delay = 5 // Base delay (reduced from 30)
+        // Fast streaming speeds
+        let delay = 5 // Base delay
         if (aiContent[i] === ' ') {
-          delay = 2 // Very fast for spaces (reduced from 10)
+          delay = 2 // Very fast for spaces
         } else if (aiContent[i] === '.' || aiContent[i] === '!' || aiContent[i] === '?') {
-          delay = 15 // Short pause at punctuation (reduced from 100)
+          delay = 15 // Short pause at punctuation
         } else if (aiContent[i] === ',') {
-          delay = 8 // Quick pause for commas (reduced from 50)
+          delay = 8 // Quick pause for commas
         } else {
-          delay = 3 + Math.random() * 4 // Fast random delay for regular characters (reduced from 30-50)
+          delay = 3 + Math.random() * 4 // Fast random delay for regular characters
         }
         
         await new Promise(resolve => setTimeout(resolve, delay))
       }
       
+      console.log('Fallback streaming completed')
       return aiContent
     }
   }

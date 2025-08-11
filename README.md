@@ -251,99 +251,68 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 🤖 AI Integration
 
-### Current Implementation
+### FastAPI Backend Integration
 
-The app currently includes a simulated streaming AI response system that demonstrates how real AI integration would work. The streaming functionality includes:
+The app now supports **FastAPI backend integration** with intelligent fallback to simulated responses. This provides a robust chat experience that works with your custom AI models while maintaining reliability.
 
-- **Character-by-character output**: Text appears gradually for natural conversation flow
-- **Variable typing speeds**: Different delays for spaces, punctuation, and regular characters
-- **Typing indicators**: Shows when AI is about to respond
-- **Cursor animation**: Blinking cursor during streaming
-- **Error handling**: Graceful fallback if streaming fails
+#### Features
 
-### Integrating with Real AI Services
+- **FastAPI Integration**: Direct connection to your FastAPI backend at `localhost:8004`
+- **Real-time Streaming**: Character-by-character streaming from your AI model
+- **Automatic Fallback**: Graceful fallback to simulated responses if FastAPI is unavailable
+- **Session Management**: Unique session IDs for conversation continuity
+- **Image Support**: Ready for image upload functionality via base64 encoding
+- **Dual Architecture**: Client-side direct connection + server-side proxy support
 
-#### OpenAI Integration
+#### Configuration
 
-1. **Add your OpenAI API key to `.env`**:
-   ```env
-   OPENAI_API_KEY=your_openai_api_key_here
-   ```
+1. **Environment Setup** - Add to your `.env` file:
+```env
+# FastAPI Backend Configuration (for Vite client)
+VITE_FASTAPI_URL=http://localhost:8004
 
-2. **Uncomment the OpenAI code in `server/routes/ai.js`**:
-   ```javascript
-   const response = await fetch('https://api.openai.com/v1/chat/completions', {
-     method: 'POST',
-     headers: {
-       'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
-       'Content-Type': 'application/json',
-     },
-     body: JSON.stringify({
-       model: 'gpt-3.5-turbo',
-       messages: [
-         { role: 'user', content: message }
-       ],
-       stream: true,
-       max_tokens: 1000,
-       temperature: 0.7
-     })
-   })
-   ```
+# FastAPI Backend Configuration (for Node.js server)
+FASTAPI_URL=http://localhost:8004
 
-3. **Update the client-side streaming function in `ChatContext.jsx`**:
-   ```javascript
-   const response = await fetch('/api/ai/stream', {
-     method: 'POST',
-     headers: {
-       'Content-Type': 'application/json',
-       'Authorization': `Bearer ${token}`
-     },
-     body: JSON.stringify({
-       message: userMessage,
-       chatId: chatId
-     })
-   })
-   ```
+# Fallback to hardcoded responses if FastAPI is unavailable
+VITE_USE_FALLBACK=true
+```
 
-#### Anthropic Claude Integration
+2. **FastAPI Endpoint Structure** - Your FastAPI server should provide:
+```
+POST /stream
+Content-Type: application/json
 
-1. **Add your Anthropic API key to `.env`**:
-   ```env
-   ANTHROPIC_API_KEY=your_anthropic_api_key_here
-   ```
+{
+  "session_id": "session_1234567890_abc123",
+  "query": "{\"text\":\"user message\",\"image_base64\":\"\"}"
+}
+```
 
-2. **Update the server endpoint**:
-   ```javascript
-   const response = await fetch('https://api.anthropic.com/v1/messages', {
-     method: 'POST',
-     headers: {
-       'x-api-key': process.env.ANTHROPIC_API_KEY,
-       'Content-Type': 'application/json',
-       'anthropic-version': '2023-06-01'
-     },
-     body: JSON.stringify({
-       model: 'claude-3-sonnet-20240229',
-       max_tokens: 1000,
-       messages: [
-         { role: 'user', content: message }
-       ],
-       stream: true
-     })
-   })
-   ```
+### Customizing Responses
 
-#### Other AI Services
+You can customize the AI responses by modifying the `generateAIResponse` function in `client/src/context/ChatContext.jsx`:
 
-The streaming architecture is designed to be easily adaptable to any AI service that supports streaming responses. Simply update the API endpoint and response parsing logic in `server/routes/ai.js`.
+```javascript
+const generateAIResponse = (userMessage) => {
+  const responses = [
+    `I understand you're asking about "${userMessage}". This is a simulated response from askVeda AI assistant.`,
+    `Thank you for your message: "${userMessage}". I'm here to help with your queries.`,
+    // Add your custom responses here
+  ]
+  
+  return responses[Math.floor(Math.random() * responses.length)]
+}
+```
 
 ### Customizing Streaming Behavior
 
 You can customize the streaming experience by modifying:
 
 - **Typing speed**: Adjust delays in the `streamAIResponse` function
-- **Typing indicators**: Modify the AI typing indicator timing
+- **Response variations**: Update the response templates in `generateAIResponse`
+- **Typing indicators**: Modify the AI typing indicator timing  
 - **Cursor animation**: Update the CSS animation in `index.css`
-- **Response generation**: Customize the `generateAIResponse` function
 
 ## 🐛 Troubleshooting
 
