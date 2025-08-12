@@ -18,9 +18,18 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
   const [isHovering, setIsHovering] = useState(false)
 
   const handleNewChat = async () => {
+    // Prevent multiple clicks while creating
+    if (isCreatingChat) {
+      return
+    }
+
     // If there's already an empty chat, navigate to it instead of creating a new one
     if (hasEmptyChat()) {
-      const emptyChat = chats.find(chat => chat.messageCount === 0 || !chat.lastMessage || !chat.lastMessage.content)
+      const emptyChat = chats.find(chat => 
+        chat.messageCount === 0 || 
+        !chat.lastMessage || 
+        !chat.lastMessage.content
+      )
       if (emptyChat) {
         navigate(`/chat/${emptyChat.id}`)
         setShowMobileMenu(false)
@@ -52,13 +61,11 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
 
   const handleDeleteChat = (e, chatIdToDelete) => {
     e.stopPropagation() // Prevent chat selection
-    if (window.confirm('Are you sure you want to delete this chat? This action cannot be undone.')) {
-      removeChat(chatIdToDelete)
-      
-      // If we're currently in the deleted chat, navigate to a new chat
-      if (chatId === chatIdToDelete) {
-        handleNewChat()
-      }
+    removeChat(chatIdToDelete)
+    
+    // If we're currently in the deleted chat, navigate to a new chat
+    if (chatId === chatIdToDelete) {
+      handleNewChat()
     }
   }
 
@@ -168,7 +175,11 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
                   className="w-full p-3 rounded-xl bg-gradient-to-br from-green-50 to-emerald-50 hover:from-green-100 hover:to-emerald-100 shadow-sm hover:shadow-md border border-green-200/50 hover:border-green-300/70 transition-all duration-300 cursor-pointer flex justify-center disabled:opacity-50 hover:scale-110 hover:-translate-y-0.5 disabled:hover:scale-100 disabled:hover:-translate-y-0 group icon-3d"
                 >
                   <div className="relative">
-                    <PlusIcon className="w-5 h-5 text-green-600 group-hover:text-green-700 transition-all duration-300 drop-shadow-sm" />
+                    {isCreatingChat ? (
+                      <div className="animate-spin rounded-full h-5 w-5 border-2 border-green-600 border-t-transparent"></div>
+                    ) : (
+                      <PlusIcon className="w-5 h-5 text-green-600 group-hover:text-green-700 transition-all duration-300 drop-shadow-sm" />
+                    )}
                     <div className="absolute inset-0 bg-gradient-to-br from-green-400/20 to-transparent rounded-full blur-sm opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                   </div>
                 </button>
@@ -336,9 +347,6 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
                             chatId === chat.id ? 'text-text-accent' : isEmptyChat(chat) ? 'text-text-accent' : 'text-text-primary'
                           }`}>
                             {getChatTitle(chat)}
-                            {isEmptyChat(chat) && (
-                              <span className="ml-1 text-xs text-primary-500">(Empty)</span>
-                            )}
                           </p>
                           <p className="text-xs text-text-secondary mt-1">
                             {formatDate(chat.createdAt)}
@@ -477,7 +485,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
                     onClick={() => setShowMobileMenu(false)}
                     className="p-2 hover:bg-gray-100 rounded-lg"
                   >
-                    <Menu className="w-6 h-6 text-gray-600" />
+                    <Bars3Icon className="w-6 h-6 text-gray-600" />
                   </button>
                 </div>
               </div>

@@ -29,9 +29,22 @@ router.post('/register', async (req, res) => {
 
     await user.save()
 
-    // Generate JWT token
+    // Create session for registration
+    const sessionId = Session.generateSessionId()
+    const session = new Session({
+      sessionId,
+      userId: user._id,
+      userAgent: req.headers['user-agent'],
+      ipAddress: req.ip || req.connection.remoteAddress
+    })
+    await session.save()
+
+    // Generate JWT token with sessionId
     const token = jwt.sign(
-      { userId: user._id },
+      { 
+        userId: user._id,
+        sessionId: sessionId
+      },
       process.env.JWT_SECRET || 'your-secret-key',
       { expiresIn: '7d' }
     )
@@ -39,6 +52,7 @@ router.post('/register', async (req, res) => {
     res.status(201).json({
       message: 'User created successfully',
       token,
+      sessionId,
       user: user.toPublicJSON()
     })
   } catch (error) {

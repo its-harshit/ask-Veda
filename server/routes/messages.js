@@ -117,6 +117,12 @@ router.post('/', authenticateUser, async (req, res) => {
     const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key')
     const sessionId = decoded.sessionId
 
+    if (!sessionId) {
+      return res.status(400).json({
+        error: 'Invalid session. Please login again.'
+      })
+    }
+
     // Create new message
     const message = new Message({
       content,

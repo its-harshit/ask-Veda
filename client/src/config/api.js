@@ -10,5 +10,5 @@ export const API_CONFIG = {
 
 // Session management
 export const generateSessionId = () => {
-  return `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+  return 'sess_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
 };

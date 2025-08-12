@@ -1,6 +1,7 @@
 const express = require('express')
 const fetch = require('node-fetch')
 const router = express.Router()
+const Chat = require('../models/Chat')
 
 // Middleware to verify JWT token
 const authenticateToken = (req, res, next) => {
@@ -22,7 +23,7 @@ const authenticateToken = (req, res, next) => {
 
 // Helper function to generate session ID
 const generateSessionId = () => {
-  return `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+  return 'sess_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9)
 }
 
 // Streaming AI response endpoint with FastAPI proxy
@@ -41,7 +42,15 @@ router.post('/stream', authenticateToken, async (req, res) => {
   try {
     // Try FastAPI endpoint first if configured
     const fastApiUrl = process.env.FASTAPI_URL || 'http://localhost:8004'
-    const sessionId = generateSessionId()
+    
+    // Get session ID from the chat if available
+    let sessionId
+    if (chatId) {
+      const chat = await Chat.findById(chatId)
+      sessionId = chat?.sessionId || generateSessionId()
+    } else {
+      sessionId = generateSessionId()
+    }
 
     try {
       console.log('Attempting FastAPI proxy to:', `${fastApiUrl}/stream`)
@@ -130,7 +139,15 @@ router.post('/chat', authenticateToken, async (req, res) => {
   try {
     // Try FastAPI endpoint first if configured
     const fastApiUrl = process.env.FASTAPI_URL || 'http://localhost:8004'
-    const sessionId = generateSessionId()
+    
+    // Get session ID from the chat if available
+    let sessionId
+    if (chatId) {
+      const chat = await Chat.findById(chatId)
+      sessionId = chat?.sessionId || generateSessionId()
+    } else {
+      sessionId = generateSessionId()
+    }
 
     try {
       console.log('Attempting FastAPI proxy to:', `${fastApiUrl}/stream`)

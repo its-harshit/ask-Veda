@@ -220,11 +220,12 @@ export const ChatProvider = ({ children }) => {
   }
 
   // Function to handle AI streaming with FastAPI integration and fallback
-  const streamAIResponse = async (userMessage, streamingMessageId, updateContent, imageData = null) => {
+  const streamAIResponse = async (userMessage, streamingMessageId, chatId, updateContent, imageData = null) => {
     console.log('Starting AI streaming for message:', userMessage)
     
-    // Generate session ID for this conversation
-    const sessionId = generateSessionId()
+    // Get the current chat to use its session ID
+    const currentChat = state.chats.find(chat => chat.id === chatId)
+    const sessionId = currentChat?.sessionId || generateSessionId()
     
     try {
       // Try FastAPI endpoint first
@@ -309,18 +310,13 @@ export const ChatProvider = ({ children }) => {
 
   // Check if there's already an empty chat
   const hasEmptyChat = useCallback(() => {
-    // Check if current chat has messages in local state
-    if (state.messages.length > 0) {
-      return false
-    }
-    
     // Check if any chat in the list is empty
     return state.chats.some(chat => 
       chat.messageCount === 0 || 
       !chat.lastMessage || 
       !chat.lastMessage.content
     )
-  }, [state.messages.length, state.chats])
+  }, [state.chats])
 
   // API Functions
   const fetchChats = useCallback(async () => {
@@ -500,7 +496,7 @@ export const ChatProvider = ({ children }) => {
       let messageCreated = false
 
       // Simulate streaming AI response
-      const aiContent = await streamAIResponse(content, streamingMessageId, (content) => {
+      const aiContent = await streamAIResponse(content, streamingMessageId, chatId, (content) => {
         // Create message bubble only when first character appears
         if (content.length === 1 && !messageCreated) {
           messageCreated = true

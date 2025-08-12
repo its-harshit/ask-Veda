@@ -68,6 +68,12 @@ router.post('/', authenticateUser, async (req, res) => {
     const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key')
     const sessionId = decoded.sessionId
 
+    if (!sessionId) {
+      return res.status(400).json({
+        error: 'Invalid session. Please login again.'
+      })
+    }
+
     const chat = new Chat({
       title,
       createdBy: req.user._id,
