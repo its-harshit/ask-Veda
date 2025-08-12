@@ -1,5 +1,5 @@
 import React from 'react'
-import { Menu, Plus, Wifi, WifiOff } from 'lucide-react'
+import { Bars3Icon, PlusIcon, SignalIcon, SignalSlashIcon } from '@heroicons/react/24/outline'
 
 const ChatHeader = ({ sidebarOpen, setSidebarOpen, isConnected }) => {
   return (
@@ -9,7 +9,7 @@ const ChatHeader = ({ sidebarOpen, setSidebarOpen, isConnected }) => {
           onClick={() => setSidebarOpen(!sidebarOpen)}
           className="p-2 rounded-lg hover:bg-gray-100 transition-colors md:hidden"
         >
-          <Menu className="w-5 h-5 text-gray-600" />
+          <Bars3Icon className="w-5 h-5 text-gray-600" />
         </button>
         
         <div className="flex items-center space-x-3">
@@ -27,19 +27,19 @@ const ChatHeader = ({ sidebarOpen, setSidebarOpen, isConnected }) => {
         <div className="flex items-center space-x-1 text-sm text-text-secondary">
           {isConnected ? (
             <>
-              <Wifi className="w-4 h-4 text-success-500" />
+              <SignalIcon className="w-4 h-4 text-success-500" />
               <span>Connected</span>
             </>
           ) : (
             <>
-              <WifiOff className="w-4 h-4 text-danger-500" />
+              <SignalSlashIcon className="w-4 h-4 text-danger-500" />
               <span>Disconnected</span>
             </>
           )}
         </div>
         
         <button className="p-2 rounded-lg hover:bg-gray-100 transition-colors">
-          <Plus className="w-5 h-5 text-gray-600" />
+          <PlusIcon className="w-5 h-5 text-gray-600" />
         </button>
       </div>
     </div>

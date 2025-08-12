@@ -4,7 +4,7 @@ import { useSocket } from '../context/SocketContext'
 import { useAuth } from '../context/AuthContext'
 import { useParams } from 'react-router-dom'
 import MessageList from './MessageList'
-import { Menu, Plus, Send, Bot, User, Search, Paperclip } from 'lucide-react'
+import { MagnifyingGlassIcon, PaperClipIcon, PaperAirplaneIcon } from '@heroicons/react/24/outline'
 import npciLogo from '../assets/npci-logo.jpg'
 
 const ChatInterface = ({ sidebarOpen, setSidebarOpen }) => {
@@ -13,7 +13,10 @@ const ChatInterface = ({ sidebarOpen, setSidebarOpen }) => {
   const { isAuthenticated } = useAuth()
   const { chatId } = useParams()
   const messagesEndRef = useRef(null)
+  const inputRef = useRef(null)
+  const bottomInputRef = useRef(null)
   const [inputValue, setInputValue] = useState('')
+  const [justTransitioned, setJustTransitioned] = useState(false)
 
   // Load messages when chatId changes
   useEffect(() => {
@@ -32,9 +35,44 @@ const ChatInterface = ({ sidebarOpen, setSidebarOpen }) => {
     scrollToBottom()
   }, [messages])
 
+  // Detect transition from empty to non-empty chat
+  useEffect(() => {
+    if (messages.length === 1) {
+      // Just transitioned from empty to having one message
+      setJustTransitioned(true)
+      // Focus the bottom input immediately
+      setTimeout(() => {
+        bottomInputRef.current?.focus()
+        setJustTransitioned(false)
+      }, 100)
+    }
+  }, [messages.length])
+
+  // Auto-focus input after AI response is complete
+  useEffect(() => {
+    if (!isLoading && !aiTyping && !justTransitioned) {
+      // If we have messages, focus the bottom input
+      if (messages.length > 0) {
+        // Check if the last message is from assistant and not streaming
+        const lastMessage = messages[messages.length - 1]
+        if (lastMessage && lastMessage.role === 'assistant' && !lastMessage.isStreaming) {
+          // Small delay to ensure the message is fully rendered
+          setTimeout(() => {
+            bottomInputRef.current?.focus()
+          }, 100)
+        }
+      } else {
+        // If no messages, focus the main input
+        setTimeout(() => {
+          inputRef.current?.focus()
+        }, 100)
+      }
+    }
+  }, [isLoading, aiTyping, messages, justTransitioned])
+
   const handleSubmit = (e) => {
     e.preventDefault()
-    if (inputValue.trim()) {
+    if (inputValue.trim() && !isLoading) {
       sendMessage(inputValue.trim(), chatId)
       setInputValue('')
     }
@@ -84,13 +122,14 @@ const ChatInterface = ({ sidebarOpen, setSidebarOpen }) => {
                     {/* Left Icons */}
                     <div className="flex items-center space-x-2">
                       <div className="w-8 h-8 bg-primary-200 rounded-full flex items-center justify-center">
-                        <Search className="w-4 h-4 text-primary-500" />
+                        <MagnifyingGlassIcon className="w-4 h-4 text-primary-500" />
                       </div>
                     </div>
                     
                     {/* Input Field */}
                     <div className="flex-1">
                       <input
+                        ref={inputRef}
                         type="text"
                         placeholder="Ask anything..."
                         value={inputValue}
@@ -106,13 +145,18 @@ const ChatInterface = ({ sidebarOpen, setSidebarOpen }) => {
                         type="button"
                         className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center hover:bg-gray-200 transition-colors"
                       >
-                        <Paperclip className="w-4 h-4 text-gray-500" />
+                        <PaperClipIcon className="w-4 h-4 text-gray-500" />
                       </button>
                       <button 
                         type="submit"
-                        className="w-8 h-8 bg-primary-500 rounded-full flex items-center justify-center hover:bg-primary-600 transition-colors"
+                        disabled={isLoading}
+                        className={`w-8 h-8 rounded-full flex items-center justify-center transition-colors ${
+                          isLoading 
+                            ? 'bg-gray-300 cursor-not-allowed' 
+                            : 'bg-primary-500 hover:bg-primary-600'
+                        }`}
                       >
-                        <Send className="w-4 h-4 text-white" />
+                        <PaperAirplaneIcon className={`w-4 h-4 ${isLoading ? 'text-gray-500' : 'text-white'}`} />
                       </button>
                     </div>
                   </div>
@@ -157,10 +201,7 @@ const ChatInterface = ({ sidebarOpen, setSidebarOpen }) => {
               
               {/* Typing indicator */}
               {(typing || aiTyping) && (
-                <div className="flex items-center space-x-2 p-4">
-                  <div className="w-8 h-8 bg-background-tertiary rounded-full flex items-center justify-center">
-                    <Bot className="w-4 h-4 text-primary-500" />
-                  </div>
+                <div className="flex items-center p-4">
                   <div className="typing-indicator">
                     <div className="typing-dot"></div>
                     <div className="typing-dot" style={{ animationDelay: '0.2s' }}></div>
@@ -184,13 +225,14 @@ const ChatInterface = ({ sidebarOpen, setSidebarOpen }) => {
                 {/* Left Icons */}
                 <div className="flex items-center space-x-2">
                   <div className="w-8 h-8 bg-primary-200 rounded-full flex items-center justify-center">
-                    <Search className="w-4 h-4 text-primary-500" />
+                    <MagnifyingGlassIcon className="w-4 h-4 text-primary-500" />
                   </div>
                 </div>
                 
                 {/* Input Field */}
                 <div className="flex-1">
                   <input
+                    ref={bottomInputRef}
                     type="text"
                     placeholder="Ask anything..."
                     value={inputValue}
@@ -206,13 +248,18 @@ const ChatInterface = ({ sidebarOpen, setSidebarOpen }) => {
                     type="button"
                     className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center hover:bg-gray-200 transition-colors"
                   >
-                    <Paperclip className="w-4 h-4 text-gray-500" />
+                    <PaperClipIcon className="w-4 h-4 text-gray-500" />
                   </button>
                   <button 
                     type="submit"
-                    className="w-8 h-8 bg-primary-500 rounded-full flex items-center justify-center hover:bg-primary-600 transition-colors"
+                    disabled={isLoading}
+                    className={`w-8 h-8 rounded-full flex items-center justify-center transition-colors ${
+                      isLoading 
+                        ? 'bg-gray-300 cursor-not-allowed' 
+                        : 'bg-primary-500 hover:bg-primary-600'
+                    }`}
                   >
-                    <Send className="w-4 h-4 text-white" />
+                    <PaperAirplaneIcon className={`w-4 h-4 ${isLoading ? 'text-gray-500' : 'text-white'}`} />
                   </button>
                 </div>
               </div>

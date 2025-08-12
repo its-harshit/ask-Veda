@@ -39,8 +39,13 @@ const chatReducer = (state, action) => {
           chat.id === action.payload.id ? action.payload : chat
         )
       }
-    case 'SET_LOADING':
-      return { ...state, isLoading: action.payload }
+          case 'SET_LOADING':
+        return { ...state, isLoading: action.payload }
+      case 'REMOVE_CHAT':
+        return { 
+          ...state, 
+          chats: state.chats.filter(chat => chat.id !== action.payload)
+        }
     case 'SET_CREATING_CHAT':
       return { ...state, isCreatingChat: action.payload }
     case 'SET_LOADING_CHATS':
@@ -102,7 +107,7 @@ const chatReducer = (state, action) => {
 export const ChatProvider = ({ children }) => {
   const [state, dispatch] = useReducer(chatReducer, initialState)
   const { onMessage, sendMessage: socketSendMessage } = useSocket()
-  const { token, isAuthenticated } = useAuth()
+  const { token, isAuthenticated, user } = useAuth()
   const navigate = useNavigate()
   const [isCreatingLoginChat, setIsCreatingLoginChat] = useState(false)
   const loginChatProcessedRef = useRef(false)
@@ -130,6 +135,23 @@ export const ChatProvider = ({ children }) => {
 
   const updateChat = (chat) => {
     dispatch({ type: 'UPDATE_CHAT', payload: chat })
+  }
+
+  const removeChat = (chatId) => {
+    console.log('Removing chat from local state:', chatId)
+    
+    // Get current deleted chats from localStorage
+    const deletedChatsKey = `deletedChats_${user?.id || 'anonymous'}`
+    const deletedChats = JSON.parse(localStorage.getItem(deletedChatsKey) || '[]')
+    
+    // Add this chat to deleted list if not already there
+    if (!deletedChats.includes(chatId)) {
+      deletedChats.push(chatId)
+      localStorage.setItem(deletedChatsKey, JSON.stringify(deletedChats))
+    }
+    
+    // Remove from local state
+    dispatch({ type: 'REMOVE_CHAT', payload: chatId })
   }
 
   const setLoading = (loading) => {
@@ -313,10 +335,19 @@ export const ChatProvider = ({ children }) => {
         }
       })
 
-      if (response.ok) {
-        const data = await response.json()
-        setChats(data.chats)
-      } else {
+              if (response.ok) {
+          const data = await response.json()
+          
+          // Get deleted chats from localStorage
+          const deletedChatsKey = `deletedChats_${user?.id || 'anonymous'}`
+          const deletedChats = JSON.parse(localStorage.getItem(deletedChatsKey) || '[]')
+          
+          // Filter out deleted chats
+          const filteredChats = data.chats.filter(chat => !deletedChats.includes(chat.id))
+          
+          console.log('Fetched chats:', data.chats.length, 'Filtered chats:', filteredChats.length, 'Deleted chats:', deletedChats.length)
+          setChats(filteredChats)
+        } else {
         setError('Failed to fetch chats')
       }
     } catch (error) {
@@ -407,6 +438,9 @@ export const ChatProvider = ({ children }) => {
       return
     }
 
+    // Set loading state to prevent multiple submissions
+    setLoading(true)
+
     try {
       // Save user message to database
       const userMessageResponse = await fetch('http://localhost:5000/api/messages', {
@@ -461,34 +495,40 @@ export const ChatProvider = ({ children }) => {
       // Wait a bit to show typing indicator
       await new Promise(resolve => setTimeout(resolve, 1000 + Math.random() * 1000))
       
-      // Hide typing indicator and start streaming
-      setAiTyping(false)
-      
       // Create a temporary AI message for streaming
       const streamingMessageId = `streaming-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
-      const tempAiMessage = {
-        id: streamingMessageId,
-        content: '',
-        role: 'assistant',
-        timestamp: new Date().toISOString(),
-        chatId: chatId,
-        isStreaming: true
-      }
-
-      // Add temporary AI message to local state
-      addMessage(tempAiMessage)
-      startStreaming(streamingMessageId)
+      let messageCreated = false
 
       // Simulate streaming AI response
-      const aiContent = await streamAIResponse(content, streamingMessageId, updateStreamingContent)
+      const aiContent = await streamAIResponse(content, streamingMessageId, (content) => {
+        // Create message bubble only when first character appears
+        if (content.length === 1 && !messageCreated) {
+          messageCreated = true
+          setAiTyping(false)
+          
+          const tempAiMessage = {
+            id: streamingMessageId,
+            content: '',
+            role: 'assistant',
+            timestamp: new Date().toISOString(),
+            chatId: chatId,
+            isStreaming: true
+          }
+          
+          // Add temporary AI message to local state
+          addMessage(tempAiMessage)
+          startStreaming(streamingMessageId)
+        }
+        
+        if (messageCreated) {
+          updateStreamingContent(content)
+        }
+      })
       
-      // Stop streaming and save final message to database
+      // Stop streaming
       stopStreaming()
       
-      // Always update the streaming message with final content
-      // This ensures we don't create duplicate messages
-      updateMessage(streamingMessageId, { content: aiContent, isStreaming: false })
-      
+      // Save final message to database
       const aiMessageResponse = await fetch('http://localhost:5000/api/messages', {
         method: 'POST',
         headers: {
@@ -506,22 +546,28 @@ export const ChatProvider = ({ children }) => {
         const aiMessageData = await aiMessageResponse.json()
         const aiMessage = aiMessageData.messageData
         
-        // Update the existing message with database information
-        console.log('Updating with final message from database:', { streamingMessageId, aiMessage })
-        updateMessage(streamingMessageId, { ...aiMessage, isStreaming: false })
+        // Single update with final content and database info
+        console.log('Finalizing message with database info:', { streamingMessageId, aiMessage })
+        updateMessage(streamingMessageId, { 
+          content: aiContent, 
+          isStreaming: false,
+          ...aiMessage 
+        })
       } else {
         console.error('Failed to save AI message:', aiMessageResponse.status)
-        // Message is already updated with content, just ensure it's marked as not streaming
-        console.log('Database save failed, keeping local message:', { streamingMessageId, aiContent })
+        // Just mark as not streaming if database save failed
+        updateMessage(streamingMessageId, { isStreaming: false })
       }
 
-      // Remove any duplicate messages that might have been created
-      setTimeout(() => removeDuplicates(), 100)
+      // Reset loading state after completion
+      setLoading(false)
 
     } catch (error) {
       console.error('Error sending message:', error)
       setError('Network error while sending message')
       stopStreaming()
+      // Reset loading state on error
+      setLoading(false)
     }
   }, [isAuthenticated, token, addMessage, setError, fetchChats, state.chats, startStreaming, updateStreamingContent, stopStreaming, dispatch, state.messages, streamAIResponse])
 
@@ -605,6 +651,7 @@ export const ChatProvider = ({ children }) => {
     setAiTyping,
     updateMessage,
     removeDuplicates,
+    removeChat,
     streamAIResponse
   }
 

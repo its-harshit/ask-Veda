@@ -40,14 +40,14 @@ const Message = ({ message }) => {
 
   return (
     <div className={`flex ${isUser ? 'justify-end' : 'justify-start'} mb-4`}>
-      <div className={`flex-1 max-w-3xl ${isUser ? 'text-right' : ''}`}>
+      <div className={`flex-1 max-w-5xl ${isUser ? 'text-right' : ''}`}>
         <div className={`inline-block rounded-2xl px-4 py-3 max-w-full ${
           isUser 
-            ? 'bg-primary-500 text-white' 
-            : 'bg-background-tertiary text-text-primary'
+            ? 'bg-gray-100 text-gray-800' 
+            : 'bg-white text-text-primary'
         }`}>
           {isUser ? (
-            <span className="text-white break-words">{displayContent}</span>
+            <span className="text-gray-800 break-words">{displayContent}</span>
           ) : (
             <div className="max-w-none">
               <ReactMarkdown components={components}>
