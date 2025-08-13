@@ -112,14 +112,12 @@ router.post('/', authenticateUser, async (req, res) => {
       })
     }
 
-    // Get session ID from token
-    const token = req.headers.authorization?.replace('Bearer ', '')
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key')
-    const sessionId = decoded.sessionId
+    // Use the chat's session ID for message tracking
+    const sessionId = chat.sessionId
 
     if (!sessionId) {
       return res.status(400).json({
-        error: 'Invalid session. Please login again.'
+        error: 'Chat session not found. Please create a new chat.'
       })
     }
 

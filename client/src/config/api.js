@@ -12,3 +12,8 @@ export const API_CONFIG = {
 export const generateSessionId = () => {
   return 'sess_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
 };
+
+// Chat-specific session management
+export const generateChatSessionId = () => {
+  return 'chat_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+};

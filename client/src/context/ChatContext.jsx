@@ -223,9 +223,11 @@ export const ChatProvider = ({ children }) => {
   const streamAIResponse = async (userMessage, streamingMessageId, chatId, updateContent, imageData = null) => {
     console.log('Starting AI streaming for message:', userMessage)
     
-    // Get the current chat to use its session ID
+    // Get the current chat to use its chat-specific session ID
     const currentChat = state.chats.find(chat => chat.id === chatId)
     const sessionId = currentChat?.sessionId || generateSessionId()
+    
+    console.log('Using chat-specific session ID:', sessionId)
     
     try {
       // Try FastAPI endpoint first

@@ -5,6 +5,11 @@ const Message = require('../models/Message')
 const User = require('../models/User')
 const router = express.Router()
 
+// Helper function to generate chat-specific session ID
+const generateChatSessionId = () => {
+  return 'chat_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9)
+}
+
 // Middleware to authenticate user
 const authenticateUser = async (req, res, next) => {
   try {
@@ -63,25 +68,19 @@ router.post('/', authenticateUser, async (req, res) => {
   try {
     const { title = 'New Chat' } = req.body
 
-    // Get session ID from token
-    const token = req.headers.authorization?.replace('Bearer ', '')
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key')
-    const sessionId = decoded.sessionId
-
-    if (!sessionId) {
-      return res.status(400).json({
-        error: 'Invalid session. Please login again.'
-      })
-    }
+    // Generate a new unique session ID for this specific chat
+    const chatSessionId = generateChatSessionId()
+    console.log('Creating new chat with isolated session ID:', chatSessionId)
 
     const chat = new Chat({
       title,
       createdBy: req.user._id,
       participants: [req.user._id],
-      sessionId: sessionId
+      sessionId: chatSessionId
     })
 
     await chat.save()
+    console.log('Chat created successfully with session isolation')
 
     // Populate creator info
     await chat.populate('createdBy', 'username avatar')

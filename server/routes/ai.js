@@ -43,13 +43,15 @@ router.post('/stream', authenticateToken, async (req, res) => {
     // Try FastAPI endpoint first if configured
     const fastApiUrl = process.env.FASTAPI_URL || 'http://localhost:8004'
     
-    // Get session ID from the chat if available
+    // Get session ID from the chat for conversation isolation
     let sessionId
     if (chatId) {
       const chat = await Chat.findById(chatId)
       sessionId = chat?.sessionId || generateSessionId()
+      console.log('Using chat-specific session ID for AI:', sessionId)
     } else {
       sessionId = generateSessionId()
+      console.log('No chatId provided, using generated session ID:', sessionId)
     }
 
     try {
@@ -140,13 +142,15 @@ router.post('/chat', authenticateToken, async (req, res) => {
     // Try FastAPI endpoint first if configured
     const fastApiUrl = process.env.FASTAPI_URL || 'http://localhost:8004'
     
-    // Get session ID from the chat if available
+    // Get session ID from the chat for conversation isolation
     let sessionId
     if (chatId) {
       const chat = await Chat.findById(chatId)
       sessionId = chat?.sessionId || generateSessionId()
+      console.log('Using chat-specific session ID for AI:', sessionId)
     } else {
       sessionId = generateSessionId()
+      console.log('No chatId provided, using generated session ID:', sessionId)
     }
 
     try {
