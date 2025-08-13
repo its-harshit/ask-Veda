@@ -8,6 +8,18 @@ export const API_CONFIG = {
   }
 };
 
+// Express.js backend configuration
+export const EXPRESS_API_CONFIG = {
+  BASE_URL: import.meta.env.VITE_EXPRESS_URL || 'http://localhost:5000',
+  ENDPOINTS: {
+    AUTH: '/api/auth',
+    CHATS: '/api/chats',
+    MESSAGES: '/api/messages',
+    AI: '/api/ai',
+    ADMIN: '/api/admin'
+  }
+};
+
 // Session management
 export const generateSessionId = () => {
   return 'sess_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);

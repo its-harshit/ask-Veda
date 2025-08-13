@@ -4,6 +4,7 @@ import ChatInterface from './components/ChatInterface'
 import Sidebar from './components/Sidebar'
 import ProtectedRoute from './components/ProtectedRoute'
 import AuthContainer from './components/AuthContainer'
+import AdminDashboard from './components/AdminDashboard'
 import { ChatProvider } from './context/ChatContext'
 import { SocketProvider } from './context/SocketContext'
 import { AuthProvider } from './context/AuthContext'
@@ -40,6 +41,11 @@ function App() {
                       <ChatInterface sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
                     </div>
                   </div>
+                </ProtectedRoute>
+              } />
+              <Route path="/admin" element={
+                <ProtectedRoute>
+                  <AdminDashboard />
                 </ProtectedRoute>
               } />
               

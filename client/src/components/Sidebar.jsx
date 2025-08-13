@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { PlusIcon, ChatBubbleLeftRightIcon, Cog6ToothIcon, UserIcon, ExclamationTriangleIcon, QuestionMarkCircleIcon, Bars3Icon, InformationCircleIcon, TrashIcon, ArrowRightOnRectangleIcon } from '@heroicons/react/24/outline'
+import { PlusIcon, ChatBubbleLeftRightIcon, Cog6ToothIcon, UserIcon, ExclamationTriangleIcon, QuestionMarkCircleIcon, Bars3Icon, InformationCircleIcon, TrashIcon, ArrowRightOnRectangleIcon, ShieldCheckIcon } from '@heroicons/react/24/outline'
 import { useChat } from '../context/ChatContext'
 import { useAuth } from '../context/AuthContext'
 import { useNavigate, useParams } from 'react-router-dom'
@@ -411,6 +411,15 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
                   <h3 className="font-medium text-text-primary mb-2">Account</h3>
                   <p className="text-sm text-text-secondary">Account management</p>
                 </div>
+                <button 
+                  onClick={() => navigate('/admin')}
+                  className="w-full p-4 bg-gradient-to-r from-purple-500 to-purple-600 text-white rounded-lg hover:from-purple-600 hover:to-purple-700 transition-all duration-200 shadow-medium hover:shadow-large transform hover:-translate-y-0.5"
+                >
+                  <div className="flex items-center space-x-3">
+                    <ShieldCheckIcon className="w-5 h-5" />
+                    <span>Admin Dashboard</span>
+                  </div>
+                </button>
               </div>
             </div>
           )}

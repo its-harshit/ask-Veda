@@ -38,6 +38,7 @@ app.use('/api/auth', require('./routes/auth'))
 app.use('/api/chats', require('./routes/chats'))
 app.use('/api/messages', require('./routes/messages'))
 app.use('/api/ai', require('./routes/ai'))
+app.use('/api/admin', require('./routes/admin'))
 
 // Socket.IO connection handling
 io.on('connection', (socket) => {
