@@ -87,7 +87,7 @@ router.get('/chat/:chatId', authenticateUser, async (req, res) => {
 // Send a message
 router.post('/', authenticateUser, async (req, res) => {
   try {
-    const { content, chatId, role = 'user' } = req.body
+    const { content, chatId, role = 'user', attachments = [] } = req.body
 
     if (!content || !chatId) {
       return res.status(400).json({
@@ -128,7 +128,8 @@ router.post('/', authenticateUser, async (req, res) => {
       chatId,
       sessionId: sessionId,
       sender: req.user._id,
-      timestamp: new Date()
+      timestamp: new Date(),
+      attachments: Array.isArray(attachments) ? attachments : []
     })
 
     await message.save()

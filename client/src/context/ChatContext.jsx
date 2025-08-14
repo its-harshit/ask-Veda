@@ -220,7 +220,8 @@ export const ChatProvider = ({ children }) => {
   }
 
   // Function to handle AI streaming with FastAPI integration and fallback
-  const streamAIResponse = async (userMessage, streamingMessageId, chatId, updateContent, imageData = null) => {
+  // imagePayload supports only { base64 } now (no upload-image step)
+  const streamAIResponse = async (userMessage, streamingMessageId, chatId, updateContent, imagePayload = null) => {
     console.log('Starting AI streaming for message:', userMessage)
     
     // Get the current chat to use its chat-specific session ID
@@ -242,7 +243,7 @@ export const ChatProvider = ({ children }) => {
           session_id: sessionId,
           query: JSON.stringify({
             text: userMessage,
-            image_base64: imageData || ""
+            image_base64: (imagePayload && imagePayload.base64) ? imagePayload.base64 : ""
           })
         }),
       });
@@ -430,7 +431,8 @@ export const ChatProvider = ({ children }) => {
     }
   }, [isAuthenticated, token, setLoading, setMessages, setError, state.messages])
 
-  const sendMessage = useCallback(async (content, chatId) => {
+  // Updated: accept optional image object for vision support. It can be { base64, file } and will be uploaded.
+  const sendMessage = useCallback(async (content, chatId, image = null) => {
     if (!isAuthenticated || !token || !chatId) {
       console.error('Cannot send message:', { isAuthenticated, hasToken: !!token, chatId })
       return
@@ -440,7 +442,16 @@ export const ChatProvider = ({ children }) => {
     setLoading(true)
 
     try {
-      // Save user message to database
+      // Prepare image payload for AI streaming (base64 only; no upload)
+      let imagePayload = null
+      let attachmentsArray = []
+      if (image && image.base64) {
+        imagePayload = { base64: image.base64 }
+        const mime = image.file?.type || 'image/*'
+        attachmentsArray = [{ url: `data:${mime};base64,${image.base64}`, mimeType: mime }]
+      }
+
+      // Save user message to database with attachments for persistence
       const userMessageResponse = await fetch('http://localhost:5000/api/messages', {
         method: 'POST',
         headers: {
@@ -450,7 +461,8 @@ export const ChatProvider = ({ children }) => {
         body: JSON.stringify({
           content,
           chatId,
-          role: 'user'
+          role: 'user',
+          attachments: attachmentsArray
         })
       })
 
@@ -462,6 +474,11 @@ export const ChatProvider = ({ children }) => {
 
       const userMessageData = await userMessageResponse.json()
       const userMessage = userMessageData.messageData
+      // For immediate UI render, if attachment exists include preview dataUrl
+      if (attachmentsArray.length) {
+        const mime = attachmentsArray[0].mimeType
+        userMessage.preview = `data:${mime};base64,${image.base64}`
+      }
 
       // Add user message to local state
       addMessage(userMessage)
@@ -521,7 +538,7 @@ export const ChatProvider = ({ children }) => {
         if (messageCreated) {
           updateStreamingContent(content)
         }
-      })
+      }, imagePayload)
       
       // Stop streaming
       stopStreaming()

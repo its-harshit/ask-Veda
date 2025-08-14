@@ -273,7 +273,40 @@ const Message = ({ message }) => {
             : 'bg-white text-text-primary'
         }`}>
           {isUser ? (
-            <span className="text-gray-800 break-words">{displayContent}</span>
+            (() => {
+              // Determine image source if any
+              let imgSrc = null
+              if (message.preview) {
+                imgSrc = message.preview
+              } else if (message.attachments && message.attachments.length > 0) {
+                const att = message.attachments[0]
+                if (att.base64) {
+                  const mime = att.mimeType || 'image/*'
+                  imgSrc = `data:${mime};base64,${att.base64}`
+                } else if (att.url) {
+                  imgSrc = att.url
+                }
+              }
+
+              const elements = []
+              // Show text content if it's not just placeholder
+              if (displayContent && displayContent !== '[image]') {
+                elements.push(
+                  <span key="text" className="text-gray-800 break-words">{displayContent}</span>
+                )
+              }
+              if (imgSrc) {
+                elements.push(
+                  <img key="img" src={imgSrc} alt="uploaded" className="w-20 rounded-lg mt-2 ml-auto" />
+                )
+              }
+
+              // If only image placeholder present and no image (edge), fallback to displayContent
+              if (elements.length === 0) {
+                return <span className="text-gray-800 break-words">{displayContent}</span>
+              }
+              return <>{elements}</>
+            })()
           ) : (
             <div className="max-w-none">
               {type === 'csv' ? (

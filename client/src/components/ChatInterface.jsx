@@ -4,7 +4,7 @@ import { useSocket } from '../context/SocketContext'
 import { useAuth } from '../context/AuthContext'
 import { useParams } from 'react-router-dom'
 import MessageList from './MessageList'
-import { MagnifyingGlassIcon, PaperClipIcon, PaperAirplaneIcon } from '@heroicons/react/24/outline'
+import { MagnifyingGlassIcon, PaperClipIcon, PaperAirplaneIcon, XMarkIcon } from '@heroicons/react/24/outline'
 import npciLogo from '../assets/npci-logo.jpg'
 
 const ChatInterface = ({ sidebarOpen, setSidebarOpen }) => {
@@ -17,6 +17,55 @@ const ChatInterface = ({ sidebarOpen, setSidebarOpen }) => {
   const bottomInputRef = useRef(null)
   const [inputValue, setInputValue] = useState('')
   const [justTransitioned, setJustTransitioned] = useState(false)
+  // Image upload state
+  const [imageData, setImageData] = useState(null)
+  const [imageFile, setImageFile] = useState(null)
+  const [imagePreview, setImagePreview] = useState(null)
+
+  // Handle attachment button click
+  const fileInputRef = useRef(null)
+
+  const handleAttachmentClick = () => {
+    if (!isLoading) {
+      fileInputRef.current?.click()
+    }
+  }
+
+  const handleFileChange = (e) => {
+    const file = e.target.files[0]
+    if (file) {
+      // Limit file size to 1MB to stay within backend limits
+      const maxSize = 1024 * 1024 // 1MB
+      if (file.size > maxSize) {
+        alert('Please select an image smaller than 1MB.')
+        return
+      }
+
+      const reader = new FileReader()
+      reader.onloadend = () => {
+        const dataUrl = reader.result
+        setImagePreview(dataUrl)
+        setImageData(dataUrl.split(',')[1])
+        setImageFile(file)
+      }
+      reader.readAsDataURL(file)
+    }
+  }
+
+  const handleRemoveImage = () => {
+    setImageData(null)
+    setImageFile(null)
+    setImagePreview(null)
+    if (fileInputRef.current) fileInputRef.current.value = ''
+  }
+
+  // Clear any selected image when switching chats
+  useEffect(() => {
+    setImageData(null)
+    setImageFile(null)
+    setImagePreview(null)
+    if (fileInputRef.current) fileInputRef.current.value = ''
+  }, [chatId])
 
   // Load messages when chatId changes
   useEffect(() => {
@@ -72,9 +121,15 @@ const ChatInterface = ({ sidebarOpen, setSidebarOpen }) => {
 
   const handleSubmit = (e) => {
     e.preventDefault()
-    if (inputValue.trim() && !isLoading) {
-      sendMessage(inputValue.trim(), chatId)
+    if ((inputValue.trim() || imageData) && !isLoading) {
+      const textToSend = inputValue.trim() || '[image]'
+      const imageParam = imageData ? { base64: imageData, file: imageFile } : null
+      sendMessage(textToSend, chatId, imageParam)
       setInputValue('')
+      setImageData(null)
+      setImageFile(null)
+      setImagePreview(null)
+      if (fileInputRef.current) fileInputRef.current.value = ''
     }
   }
 
@@ -143,6 +198,7 @@ const ChatInterface = ({ sidebarOpen, setSidebarOpen }) => {
                     <div className="flex items-center space-x-3">
                       <button 
                         type="button"
+                        onClick={handleAttachmentClick}
                         className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center hover:bg-gray-200 transition-colors"
                       >
                         <PaperClipIcon className="w-4 h-4 text-gray-500" />
@@ -162,6 +218,21 @@ const ChatInterface = ({ sidebarOpen, setSidebarOpen }) => {
                   </div>
                 </div>
               </form>
+              {imagePreview && (
+                <div className="w-full max-w-4xl mx-auto flex flex-col items-start text-left">
+                  <div className="relative">
+                    <img src={imagePreview} alt="preview" className="w-28 h-28 object-cover rounded-lg shadow-sm ring-1 ring-black/5" />
+                    <button
+                      type="button"
+                      onClick={handleRemoveImage}
+                      className="absolute top-1 right-1 bg-white shadow-sm rounded-full p-1 hover:bg-gray-50"
+                    >
+                      <XMarkIcon className="w-4 h-4 text-gray-700" />
+                    </button>
+                  </div>
+                  <span className="mt-2 text-xs text-gray-600">Image ready to send</span>
+                </div>
+              )}
               
               {/* Action Buttons - Completely Separate */}
               <div className="flex items-center justify-center space-x-3 mb-8">
@@ -216,6 +287,15 @@ const ChatInterface = ({ sidebarOpen, setSidebarOpen }) => {
         </div>
       </div>
       
+      {/* Hidden file input (single shared instance for both forms) */}
+      <input
+        type="file"
+        accept="image/*"
+        ref={fileInputRef}
+        className="hidden"
+        onChange={handleFileChange}
+      />
+
       {/* Input Area - Always present but hidden when no messages */}
       <div className={`border-t border-gray-200 p-4 bg-background-primary ${messages.length === 0 ? 'hidden' : ''}`}>
         <div className="max-w-4xl mx-auto">
@@ -246,6 +326,7 @@ const ChatInterface = ({ sidebarOpen, setSidebarOpen }) => {
                 <div className="flex items-center space-x-2">
                   <button 
                     type="button"
+                    onClick={handleAttachmentClick}
                     className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center hover:bg-gray-200 transition-colors"
                   >
                     <PaperClipIcon className="w-4 h-4 text-gray-500" />
@@ -265,6 +346,21 @@ const ChatInterface = ({ sidebarOpen, setSidebarOpen }) => {
               </div>
             </div>
           </form>
+          {imagePreview && (
+            <div className="mt-3 flex items-center space-x-2">
+              <div className="relative">
+                <img src={imagePreview} alt="preview" className="w-24 h-24 object-cover rounded-lg" />
+                <button
+                  type="button"
+                  onClick={handleRemoveImage}
+                  className="absolute top-1 right-1 bg-white/70 hover:bg-white rounded-full p-1"
+                >
+                  <XMarkIcon className="w-4 h-4 text-gray-700" />
+                </button>
+              </div>
+              <span className="text-sm text-gray-600">Image ready to send</span>
+            </div>
+          )}
         </div>
       </div>
     </div>
