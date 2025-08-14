@@ -499,8 +499,8 @@ export const ChatProvider = ({ children }) => {
 
       // Simulate streaming AI response
       const aiContent = await streamAIResponse(content, streamingMessageId, chatId, (content) => {
-        // Create message bubble only when first character appears
-        if (content.length === 1 && !messageCreated) {
+        // Create message bubble on first streaming chunk, regardless of its size
+        if (!messageCreated) {
           messageCreated = true
           setAiTyping(false)
           

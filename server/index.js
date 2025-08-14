@@ -16,8 +16,9 @@ const io = socketIo(server, {
 
 // Middleware
 app.use(cors())
-app.use(express.json())
-app.use(express.urlencoded({ extended: true }))
+// Increase body size limit to accommodate large AI responses (tables, code blocks, etc.)
+app.use(express.json({ limit: '1mb' }))
+app.use(express.urlencoded({ extended: true, limit: '1mb' }))
 
 // MongoDB Connection
 mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/askveda')
