@@ -1,4 +1,4 @@
-version: '3.8'
+# Docker Compose configuration for AskVeda
 
 services:
   # MongoDB Database
@@ -59,7 +59,7 @@ services:
     container_name: askveda-frontend
     restart: unless-stopped
     ports:
-      - "80:80"
+      - "3001:80"
     depends_on:
       - backend
     networks:

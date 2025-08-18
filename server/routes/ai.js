@@ -114,18 +114,16 @@ router.post('/stream', authenticateToken, async (req, res) => {
         } else {
           delay = 3 + Math.random() * 4 // Fast random delay for regular characters
         }
-
-        await new Promise(resolve => setTimeout(resolve, delay))
         
-        res.write(`data: ${JSON.stringify({ content: char })}\n\n`)
+        await new Promise(resolve => setTimeout(resolve, delay))
+        res.write(char)
       }
-
-      res.write('data: [DONE]\n\n')
+      
       res.end()
     }
 
   } catch (error) {
-    console.error('Error in AI streaming:', error)
+    console.error('Error in AI stream:', error)
     res.status(500).json({ error: 'Internal server error' })
   }
 })
