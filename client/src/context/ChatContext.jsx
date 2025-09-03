@@ -327,7 +327,7 @@ export const ChatProvider = ({ children }) => {
 
     try {
       setLoadingChats(true)
-      const response = await fetch('http://localhost:5000/api/chats', {
+      const response = await fetch('/api/chats', {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -368,7 +368,7 @@ export const ChatProvider = ({ children }) => {
 
     try {
       setCreatingChat(true)
-      const response = await fetch('http://localhost:5000/api/chats', {
+      const response = await fetch('/api/chats', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -408,7 +408,7 @@ export const ChatProvider = ({ children }) => {
       // Clear existing messages first to prevent duplicates
       setMessages([])
       
-      const response = await fetch(`http://localhost:5000/api/messages/chat/${chatId}`, {
+      const response = await fetch(`/api/messages/chat/${chatId}`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -452,7 +452,7 @@ export const ChatProvider = ({ children }) => {
       }
 
       // Save user message to database with attachments for persistence
-      const userMessageResponse = await fetch('http://localhost:5000/api/messages', {
+      const userMessageResponse = await fetch('/api/messages', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -487,7 +487,7 @@ export const ChatProvider = ({ children }) => {
       const currentChat = state.chats.find(chat => chat.id === chatId)
       if (currentChat && currentChat.title === 'New Chat') {
         const chatTitle = content.length > 30 ? content.substring(0, 30) + '...' : content
-        const updateChatResponse = await fetch(`http://localhost:5000/api/chats/${chatId}`, {
+        const updateChatResponse = await fetch(`/api/chats/${chatId}`, {
           method: 'PUT',
           headers: {
             'Authorization': `Bearer ${token}`,
@@ -544,7 +544,7 @@ export const ChatProvider = ({ children }) => {
       stopStreaming()
       
       // Save final message to database
-      const aiMessageResponse = await fetch('http://localhost:5000/api/messages', {
+      const aiMessageResponse = await fetch('/api/messages', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,

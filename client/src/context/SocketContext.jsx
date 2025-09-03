@@ -10,7 +10,7 @@ export const SocketProvider = ({ children }) => {
   const { chatId } = useParams()
 
   useEffect(() => {
-    const newSocket = io('http://localhost:5000', {
+    const newSocket = io('/', {
       transports: ['websocket'],
       autoConnect: true
     })

@@ -101,3 +101,7 @@ data/
 
 # Socket.IO
 .socket.io/ 
+
+Agent/
+
+venv/

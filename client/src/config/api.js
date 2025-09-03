@@ -1,7 +1,7 @@
 // API Configuration for FastAPI backend
 export const API_CONFIG = {
   // FastAPI server configuration
-  BASE_URL: import.meta.env.VITE_FASTAPI_URL || 'http://localhost:8004',
+  BASE_URL: import.meta.env.VITE_FASTAPI_URL || 'http://localhost:8030',
   ENDPOINTS: {
     STREAM: '/stream',
     UPLOAD_IMAGE: '/upload-image'

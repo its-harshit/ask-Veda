@@ -41,7 +41,7 @@ router.post('/stream', authenticateToken, async (req, res) => {
 
   try {
     // Try FastAPI endpoint first if configured
-    const fastApiUrl = process.env.FASTAPI_URL || 'http://localhost:8004'
+    const fastApiUrl = process.env.FASTAPI_URL || 'http://localhost:8050'
     
     // Get session ID from the chat for conversation isolation
     let sessionId
@@ -138,7 +138,7 @@ router.post('/chat', authenticateToken, async (req, res) => {
 
   try {
     // Try FastAPI endpoint first if configured
-    const fastApiUrl = process.env.FASTAPI_URL || 'http://localhost:8004'
+    const fastApiUrl = process.env.FASTAPI_URL || 'http://localhost:8050'
     
     // Get session ID from the chat for conversation isolation
     let sessionId
